@@ -10,7 +10,7 @@
    [game.utils :refer [to-keyword]]
    [game.replay :as replay]))
 
-(defn replay-deps [_game]
+(defn- replay-deps [_game]
   {:app-state (atom {})
    :game-state (atom {})
    :last-state (atom {})
@@ -20,14 +20,14 @@
    :load-notes (fn [] nil)
    :get-remote-annotations (fn [_] nil)})
 
-(defn find-live-card [state replay-card cid-map]
+(defn- find-live-card [state replay-card cid-map]
   (let [live-ref (get @cid-map (:cid replay-card))
         live-card (get-card state live-ref)]
     (when live-card
       {:side (to-keyword (:side live-card))
        :card live-card})))
 
-(defn check-for-correct-ids [game replay-state]
+(defn- check-for-correct-ids [game replay-state]
   (let [state (:state game)]
     (when (not= (get-in @state [:corp :identity :normalizedtitle])
                 (get-in @replay-state [:corp :identity :normalizedtitle]))
@@ -36,19 +36,19 @@
                 (get-in @replay-state [:runner :identity :normalizedtitle]))
       (throw (Exception. "Selected Runner ID does not match replay.")))))
 
-(defn move-all-cards-to-decks [game]
+(defn- move-all-cards-to-decks [game]
   (doseq [side [:corp :runner]]
     (let [state (:state game)]
       (doseq [card (get-in @state [side :hand])]
         (move state side card :deck {:suppress-event true :force true})))))
 
-(defn restore-card [game side target-card path]
+(defn- restore-card [game side target-card path]
   (let [state (:state game)
         card (find-card (:title target-card) (get-in @state [side :deck]))]
     (when-not card (throw (Exception. (str "Card " (:title target-card) " not found in deck. Check whether you selected the correct decklists."))))
     (move state side card path {:suppress-event true :force true})))
 
-(defn restore-cards-at-path [game replay-state side path cid-map]
+(defn- restore-cards-at-path [game replay-state side path cid-map]
   (doseq [target-card (get-in @replay-state (cons side path))]
     (let [live-card (restore-card game side target-card path)]
       (swap! cid-map assoc (:cid target-card) live-card))))
@@ -56,23 +56,23 @@
 (def zones {:runner [:hand :deck :discard :scored :rfg :play-area :current]
             :corp [:hand :deck :discard :scored :rfg :play-area :current]})
 
-(defn restore-basic-zones [game replay-state cid-map]
+(defn- restore-basic-zones [game replay-state cid-map]
   (doseq [side [:corp :runner]
           zone (side zones)]
     (restore-cards-at-path game replay-state side [zone] cid-map)))
 
-(defn install-paths [replay-state side]
+(defn- install-paths [replay-state side]
   (if (= side :corp)
     (mapcat (fn [server] [[:servers server :content] [:servers server :ices]])
             (keys (get-in @replay-state [:corp :servers])))
     [[:rig :program] [:rig :hardware] [:rig :resource] [:rig :facedown]]))
 
-(defn restore-installed-zones [game replay-state cid-map]
+(defn- restore-installed-zones [game replay-state cid-map]
   (doseq [side [:corp :runner]
           path (install-paths replay-state side)]
     (restore-cards-at-path game replay-state side path cid-map)))
 
-(defn restore-card-state [state live-card replay-card]
+(defn- restore-card-state [state live-card replay-card]
   (when live-card
     (let [updated (cond-> live-card
                     (contains? replay-card :rezzed) (assoc :rezzed (:rezzed replay-card))
@@ -85,7 +85,7 @@
                     (not (contains? replay-card :advance-counter)) (dissoc :advance-counter))]
       (update! state (to-keyword (:side live-card)) updated))))
 
-(defn restore-hosted-tree
+(defn- restore-hosted-tree
   ([state live-host replay-host cid-map]
    (doseq [replay-card (:hosted replay-host)]
      (let [child-side (to-keyword (:side replay-card))]
@@ -98,13 +98,13 @@
              (restore-card-state state hosted-card replay-card)
              (restore-hosted-tree state hosted-card replay-card cid-map))))))))
 
-(defn restore-card-and-hosted [state replay-card cid-map]
+(defn- restore-card-and-hosted [state replay-card cid-map]
   (when-let [{:keys [card]} (find-live-card state replay-card cid-map)]
     (when card
       (restore-card-state state card replay-card)
       (restore-hosted-tree state card replay-card cid-map))))
 
-(defn restore-hosted-cards
+(defn- restore-hosted-cards
   [game replay-state cid-map]
   (let [state (:state game)]
     (doseq [side [:corp :runner]
