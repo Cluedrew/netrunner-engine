@@ -143,6 +143,23 @@
       (when-let [id (get-in @state [side :identity])]
         (rehook-single-card state id)))))
 
+(def player-keys
+  {:corp [:click :credit :bad-publicity :hand-size :agenda-point :agenda-point-req]
+   :runner [:click :credit :run-credit :link :tag :brain-damage :hand-size :agenda-point :agenda-point-req]})
+
+(defn- restore-player-states [game replay-state]
+  (let [state (:state game)]
+    (doseq [side [:corp :runner]]
+      (let [replay-player (get @replay-state side)
+            restored (select-keys replay-player (side player-keys))]
+        (swap! state update side merge restored)))))
+
+(defn- restore-player-hand-kept [game replay-state]
+  (let [state (:state game)]
+    (doseq [side [:corp :runner]]
+      (when-let [keep (get-in @replay-state [side :keep])]
+        (swap! state assoc-in [side :keep] keep)))))
+
 (defn setup-state-from-replay [game replay-deps]
   (let [replay-state (:game-state replay-deps)
         cid-map (atom {})]
@@ -151,7 +168,9 @@
     (restore-basic-zones game replay-state cid-map)
     (restore-installed-zones game replay-state cid-map)
     (restore-hosted-cards game replay-state cid-map)
-    (restore-engine-hooks game)))
+    (restore-player-states game replay-state)
+    (restore-engine-hooks game)
+    (restore-player-hand-kept game replay-state)))
 
 (defn handle-replay-state
   [game {:keys [replay]} replay-timestamp]
