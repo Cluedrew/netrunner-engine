@@ -1,13 +1,13 @@
 (ns nr.new-game
   (:require
-   [jinteki.utils :refer [str->int]]
-   [jinteki.preconstructed :refer [all-matchups matchup-by-key]]
-   [nr.appstate :refer [app-state]]
-   [nr.auth :refer [authenticated] :as auth]
-   [nr.translations :refer [tr tr-format tr-side tr-element tr-span]]
-   [nr.utils :refer [cond-button slug->format]]
-   [nr.ws :as ws]
-   [reagent.core :as r]))
+    [jinteki.utils :refer [str->int]]
+    [jinteki.preconstructed :refer [all-matchups matchup-by-key]]
+    [nr.appstate :refer [app-state]]
+    [nr.auth :refer [authenticated] :as auth]
+    [nr.translations :refer [tr tr-format tr-side tr-element tr-span]]
+    [nr.utils :refer [cond-button slug->format]]
+    [nr.ws :as ws]
+    [reagent.core :as r]))
 
 (def new-game-keys
   [:allow-spectator
@@ -37,17 +37,17 @@
 
 (defn create-game [state lobby-state options]
   (authenticated
-   (fn [_]
-     (cond
-       (empty? (:title @state))
-       (swap! state assoc :flash-message (tr [:lobby_title-error "Please fill a game title."]))
-       (and (:protected @options)
-            (empty? (:password @options)))
-       (swap! state assoc :flash-message (tr [:lobby_password-error "Please fill a password."]))
-       :else
-       (let [new-game (select-keys (merge @state @options) new-game-keys)]
-         (swap! lobby-state assoc :editing false)
-         (ws/ws-send! [:lobby/create new-game]))))))
+    (fn [_]
+      (cond
+        (empty? (:title @state))
+        (swap! state assoc :flash-message (tr [:lobby_title-error "Please fill a game title."]))
+        (and (:protected @options)
+             (empty? (:password @options)))
+        (swap! state assoc :flash-message (tr [:lobby_password-error "Please fill a password."]))
+        :else
+        (let [new-game (select-keys (merge @state @options) new-game-keys)]
+          (swap! lobby-state assoc :editing false)
+          (ws/ws-send! [:lobby/create new-game]))))))
 
 (defn button-bar [state lobby-state options]
   [:div.button-bar
@@ -75,16 +75,16 @@
   [:section
    [tr-element :h3 [:lobby_side "Side"]]
    (doall
-    (for [option ["Any Side" "Corp" "Runner"]]
-      ^{:key option}
-      [:p
-       [:label [:input
-                {:type "radio"
-                 :name "side"
-                 :value option
-                 :on-change #(reset! side-state (.. % -target -value))
-                 :checked (= @side-state option)}]
-        (tr-side option)]]))])
+     (for [option ["Any Side" "Corp" "Runner"]]
+       ^{:key option}
+       [:p
+        [:label [:input
+                 {:type "radio"
+                  :name "side"
+                  :value option
+                  :on-change #(reset! side-state (.. % -target -value))
+                  :checked (= @side-state option)}]
+         (tr-side option)]]))])
 
 (defn singleton-only [options fmt-state]
   [:label
@@ -102,16 +102,16 @@
   [:div
    {:style {:display (if (= @fmt-state "system-gateway") "block" "none")}}
    (doall
-    (for [option ["Beginner" "Intermediate" "Constructed"]]
-      ^{:key option}
-      [:span [:label [:input
-                      {:type "radio"
-                       :name "gateway-type"
-                       :value option
-                       :on-change #(reset! gateway-type (.. % -target -value))
-                       :checked (= @gateway-type option)}]
-              [tr-span [:lobby_gateway-format option] {:format option}]
-              "    "]]))])
+     (for [option ["Beginner" "Intermediate" "Constructed"]]
+       ^{:key option}
+       [:span [:label [:input
+                       {:type "radio"
+                        :name "gateway-type"
+                        :value option
+                        :on-change #(reset! gateway-type (.. % -target -value))
+                        :checked (= @gateway-type option)}]
+               [tr-span [:lobby_gateway-format option] {:format option}]
+               "    "]]))])
 
 (defn precon-choice [fmt-state precon]
   [:div
@@ -123,9 +123,9 @@
      {:value (or @precon "worlds-2012-a")
       :on-change #(reset! precon (.. % -target -value))}
      (doall
-      (for [matchup (sort all-matchups)]
-        ^{:key (name matchup)}
-        [:option {:value (name matchup)} (tr (:tr-inner (matchup-by-key matchup)))]))]]])
+       (for [matchup (sort all-matchups)]
+         ^{:key (name matchup)}
+         [:option {:value (name matchup)} (tr (:tr-inner (matchup-by-key matchup)))]))]]])
 
 (defn format-section [fmt-state options gateway-type precon]
   [:section
@@ -134,9 +134,9 @@
     {:value (or @fmt-state "standard")
      :on-change #(reset! fmt-state (.. % -target -value))}
     (doall
-     (for [[k v] slug->format]
-       ^{:key k}
-       [:option {:value k} (tr-format v)]))]
+      (for [[k v] slug->format]
+        ^{:key k}
+        [:option {:value k} (tr-format v)]))]
    [singleton-only options fmt-state]
    [gateway-constructed-choice fmt-state gateway-type]
    [precon-choice fmt-state precon]

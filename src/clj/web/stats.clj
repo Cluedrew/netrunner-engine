@@ -1,22 +1,22 @@
 (ns web.stats
   (:require
-   [cheshire.core :as json]
-   [cljc.java-time.instant :as inst]
-   [clojure.string :refer [lower-case]]
-   [game.utils :refer [dissoc-in]]
-   [jinteki.cards :refer [all-cards]]
-   [monger.collection :as mc]
-   [monger.operators :refer :all]
-   [monger.query :as mq]
-   [monger.result :refer [acknowledged?]]
-   [ring.util.request :refer [request-url]]
-   ;;[web.angel-arena.stats :as angel-arena-stats]
-   [web.mongodb :refer [->object-id]]
-   [web.pages :as pages]
-   [web.user :refer [active-user?]]
-   [web.utils :refer [json-response response mongo-time-to-utc-string]]
-   [web.ws :as ws]
-   [taoensso.timbre :as timbre]))
+    [cheshire.core :as json]
+    [cljc.java-time.instant :as inst]
+    [clojure.string :refer [lower-case]]
+    [game.utils :refer [dissoc-in]]
+    [jinteki.cards :refer [all-cards]]
+    [monger.collection :as mc]
+    [monger.operators :refer :all]
+    [monger.query :as mq]
+    [monger.result :refer [acknowledged?]]
+    [ring.util.request :refer [request-url]]
+    ;;[web.angel-arena.stats :as angel-arena-stats]
+    [web.mongodb :refer [->object-id]]
+    [web.pages :as pages]
+    [web.user :refer [active-user?]]
+    [web.utils :refer [json-response response mongo-time-to-utc-string]]
+    [web.ws :as ws]
+    [taoensso.timbre :as timbre]))
 
 (defn clear-userstats-handler
   "Clear any statistics for a given user-id contained in a request"
@@ -180,16 +180,16 @@
 
 (defn generate-replay [state]
   (json/generate-string
-   {:metadata {:winner (:winner @state)
-               :reason (:reason @state)
-               :end-date (inst/now)
-               :stats (-> (:stats @state)
-                          (dissoc-in [:time :started])
-                          (dissoc-in [:time :ended]))
-               :turn (:turn @state)
-               :corp.agenda-points (get-in @state [:corp :agenda-point])
-               :runner.agenda-points (get-in @state [:runner :agenda-point])}
-    :history (:history @state)}))
+    {:metadata {:winner (:winner @state)
+                :reason (:reason @state)
+                :end-date (inst/now)
+                :stats (-> (:stats @state)
+                           (dissoc-in [:time :started])
+                           (dissoc-in [:time :ended]))
+                :turn (:turn @state)
+                :corp.agenda-points (get-in @state [:corp :agenda-point])
+                :runner.agenda-points (get-in @state [:runner :agenda-point])}
+     :history (:history @state)}))
 
 (defn game-finished
   [db {:keys [state gameid room] :as game}]
@@ -363,8 +363,8 @@
       (if (empty? replay)
         (response 404 {:message "Replay not found"})
         (json-response 200 (json/generate-string
-                            (assoc (json/parse-string replay true)
-                                   :replay-shared replay-shared))))
+                             (assoc (json/parse-string replay true)
+                                    :replay-shared replay-shared))))
       (response 401 {:message "Unauthorized"}))))
 
 (defn share-replay
@@ -405,8 +405,8 @@
   (let [{:keys [replay winner corp runner title]} (mc/find-one-as-map db :game-logs {:gameid (or gameid bugid)})
         replay (or replay {})
         gameid-str (cond ; different string for replays and bug-reports
-                     gameid (if (and n d) (str gameid "?n=" n "&d=" d) gameid)
-                     bugid (str bugid "?bug-report" (when b (str "&b=" b))))]
+                         gameid (if (and n d) (str gameid "?n=" n "&d=" d) gameid)
+                         bugid (str bugid "?bug-report" (when b (str "&b=" b))))]
     (if (empty? replay)
       (response 404 {:message "Replay not found"})
       (let [corp-user (get-in corp [:player :username] "Unknown")

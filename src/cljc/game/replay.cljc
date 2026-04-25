@@ -1,7 +1,7 @@
 (ns game.replay
   (:require
-   [clojure.string :refer [ends-with? join]]
-   [differ.core :as differ]))
+    [clojure.string :refer [ends-with? join]]
+    [differ.core :as differ]))
 
 (defn replay-prepare-state
   [state replay-side]
@@ -88,9 +88,9 @@
   [replay-deps]
   (let [prev-log (:log @(:game-state replay-deps))]
     (while (and
-            (or (= prev-log (:log @(:game-state replay-deps)))
-                (= "typing" (-> @(:game-state replay-deps) :log last :text)))
-            (not (replay-reached-end? @(:replay-status replay-deps) @(:replay-timeline replay-deps))))
+             (or (= prev-log (:log @(:game-state replay-deps)))
+                 (= "typing" (-> @(:game-state replay-deps) :log last :text)))
+             (not (replay-reached-end? @(:replay-status replay-deps) @(:replay-timeline replay-deps))))
       (replay-forward! replay-deps))))
 
 (defn replay-step-forward!
@@ -115,9 +115,9 @@
   [replay-deps]
   (let [prev-log (:log @(:game-state replay-deps))]
     (while (and
-            (or (= prev-log (:log @(:game-state replay-deps)))
-                (= "typing" (-> @(:game-state replay-deps) :log last :text)))
-            (not (replay-reached-start? @(:replay-status replay-deps) @(:replay-timeline replay-deps))))
+             (or (= prev-log (:log @(:game-state replay-deps)))
+                 (= "typing" (-> @(:game-state replay-deps) :log last :text)))
+             (not (replay-reached-start? @(:replay-status replay-deps) @(:replay-timeline replay-deps))))
       (replay-backward! replay-deps))))
 
 (defn populate-replay-timeline!

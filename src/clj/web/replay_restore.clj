@@ -1,17 +1,17 @@
 (ns web.replay-restore
   (:require
-   [clojure.data.json :refer [read-json]]
-   [game.core.card :refer [get-card]]
-   [game.core.effects :refer [unregister-static-abilities]]
-   [game.core.engine :refer [unregister-events]]
-   [game.core.finding :refer [find-card]]
-   [game.core.hosting :refer [host]]
-   [game.core.initializing :refer [card-init]]
-   [game.core.moving :refer [move]]
-   [game.core.say :refer [system-msg]]
-   [game.core.update :refer [update!]]
-   [game.utils :refer [to-keyword]]
-   [game.replay :as replay]))
+    [clojure.data.json :refer [read-json]]
+    [game.core.card :refer [get-card]]
+    [game.core.effects :refer [unregister-static-abilities]]
+    [game.core.engine :refer [unregister-events]]
+    [game.core.finding :refer [find-card]]
+    [game.core.hosting :refer [host]]
+    [game.core.initializing :refer [card-init]]
+    [game.core.moving :refer [move]]
+    [game.core.say :refer [system-msg]]
+    [game.core.update :refer [update!]]
+    [game.utils :refer [to-keyword]]
+    [game.replay :as replay]))
 
 (defn- replay-deps [_game]
   {:app-state (atom {})

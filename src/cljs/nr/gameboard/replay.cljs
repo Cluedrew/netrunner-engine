@@ -1,18 +1,18 @@
 (ns nr.gameboard.replay
   (:require-macros [cljs.core.async.macros :refer [go]])
   (:require
-   [cljs.core.async :refer [<! timeout] :as async]
-   [clojure.string :as s :refer [blank? capitalize]]
-   [game.replay :as replay]
-   [nr.ajax :refer [DELETE GET PUT]]
-   [nr.appstate :refer [app-state]]
-   [nr.gameboard.state :refer [game-state last-state replay-side]]
-   [nr.local-storage :as ls]
-   [nr.new-game :refer [create-game]]
-   [nr.translations :refer [tr tr-span tr-element]]
-   [nr.utils :refer [tr-non-game-toast render-message]]
-   [nr.ws :as ws]
-   [reagent.core :as r]))
+    [cljs.core.async :refer [<! timeout] :as async]
+    [clojure.string :as s :refer [blank? capitalize]]
+    [game.replay :as replay]
+    [nr.ajax :refer [DELETE GET PUT]]
+    [nr.appstate :refer [app-state]]
+    [nr.gameboard.state :refer [game-state last-state replay-side]]
+    [nr.local-storage :as ls]
+    [nr.new-game :refer [create-game]]
+    [nr.translations :refer [tr tr-span tr-element]]
+    [nr.utils :refer [tr-non-game-toast render-message]]
+    [nr.ws :as ws]
+    [reagent.core :as r]))
 
 (defonce replay-timeline (atom []))
 (defonce replay-status (r/atom {:autoplay false :speed 1600}))
@@ -136,75 +136,75 @@
           (<! (timeout (:speed @replay-status))))))
 
   (r/create-class
-   {:display-name "replay-panel"
+    {:display-name "replay-panel"
 
-    :component-did-update
-    (fn [this]
-      (scroll-timeline))
+     :component-did-update
+     (fn [this]
+       (scroll-timeline))
 
-    :component-did-mount
-    (fn [this]
-      (-> js/document (.addEventListener "keydown" handle-keydown)))
+     :component-did-mount
+     (fn [this]
+       (-> js/document (.addEventListener "keydown" handle-keydown)))
 
-    :component-will-unmount
-    (fn [this]
-      (-> js/document (.removeEventListener "keydown" handle-keydown)))
+     :component-will-unmount
+     (fn [this]
+       (-> js/document (.removeEventListener "keydown" handle-keydown)))
 
-    :reagent-render
-    (fn []
-      [:div.replay.panel.blue-shade
-       [:div#timeline
-        (doall (for [[n {step-type :type turn :turn state :state :as step}] (map-indexed #(vector %1 %2) @replay-timeline)]
-                 ^{:key (str "step-" n)}
-                 [:div.step {:class [(:active-player state) (when (= n (:n @replay-status)) "active-step") (name step-type)]}
-                  [:div.step-label {:on-click #(run-replay-step! replay/replay-jump! n)
-                                    :data-turn turn
-                                    :title (s/replace (capitalize (subs (str step-type) 1)) #"-" " ")
-                                    :class (let [annotation (get-in @replay-status [:annotations :clicks (keyword (str n))] nil)]
-                                             [(when (= n (:n @replay-status)) "active-step-label")
-                                              (when (= :start-of-turn-corp step-type) :annotated-before)
-                                              step-type
-                                              (when annotation :annotated-after)
-                                              (when annotation :notes-icon)
-                                              (when annotation (:type annotation))])}
-                   (case step-type
-                     :start-of-game "↠"
-                     :start-of-turn-corp "C"
-                     :start-of-turn-runner "R"
-                     :end-of-game "🎉"
-                     :undo-click "⮌"
-                     :undo-turn "⮰"
-                     :run "🏃"
-                     :install "▼"
-                     :draw [:div.symbol]
-                     :credit (render-message "[credit]")
-                     :advance "A"
-                     :purge "🚨"
-                     :click (render-message "[click]")
-                     "?")]]))]
-       [:div.controls
-        [:button.small {:on-click #(change-replay-speed -200) :type "button"
-                        :title "Decrease Playback speed (-)"} "-"]
-        [:button.small {:on-click #(change-replay-speed 200) :type "button"
-                        :title "Increase Playback speed (+)"} "+"]
-        [:button.small {:on-click #(run-replay-step! replay/replay-step-backward!) :type "button"
-                        :title "Rewind one click (Ctrl + ← )"} "⏮︎"]
-        [:button.small {:on-click #(run-replay-step! replay/replay-log-backward!) :type "button"
-                        :title "Rewind one log entry (←)"} "⏪︎"]
-        [:button.small {:on-click #(toggle-play-pause) :type "button"
-                        :title (if (:autoplay @replay-status) "Pause (Space)" "Play (Space)")} (if (:autoplay @replay-status) "⏸ " "▶ ")]
-        [:button.small {:on-click #(run-replay-step! replay/replay-log-forward!) :type "button"
-                        :title "Forward to next log entry (→)"} "⏩︎"]
-        [:button.small {:on-click #(run-replay-step! replay/replay-step-forward!) :type "button"
-                        :title "Forward one click (Ctrl + → )"} "⏭︎"]]
-       (when (and (not= "local-replay" (:gameid @game-state))
-                  (:replay-shared @game-state))
-         [:div.sharing
-          [:input {:style (if @show-replay-link {:display "inline"} {:display "none"})
-                   :type "text" :read-only true
-                   :value (generate-replay-link (.-origin (.-location js/window)))}]
-          [:button {:on-click #(start-replay-game)} [tr-span [:replay_start-new-game "Start new game at this point"]]]
-          [:button {:on-click #(swap! show-replay-link not)} [tr-span [:replay_share-timestamp "Share timestamp"]]]])])}))
+     :reagent-render
+     (fn []
+       [:div.replay.panel.blue-shade
+        [:div#timeline
+         (doall (for [[n {step-type :type turn :turn state :state :as step}] (map-indexed #(vector %1 %2) @replay-timeline)]
+                  ^{:key (str "step-" n)}
+                  [:div.step {:class [(:active-player state) (when (= n (:n @replay-status)) "active-step") (name step-type)]}
+                   [:div.step-label {:on-click #(run-replay-step! replay/replay-jump! n)
+                                     :data-turn turn
+                                     :title (s/replace (capitalize (subs (str step-type) 1)) #"-" " ")
+                                     :class (let [annotation (get-in @replay-status [:annotations :clicks (keyword (str n))] nil)]
+                                              [(when (= n (:n @replay-status)) "active-step-label")
+                                               (when (= :start-of-turn-corp step-type) :annotated-before)
+                                               step-type
+                                               (when annotation :annotated-after)
+                                               (when annotation :notes-icon)
+                                               (when annotation (:type annotation))])}
+                    (case step-type
+                      :start-of-game "↠"
+                      :start-of-turn-corp "C"
+                      :start-of-turn-runner "R"
+                      :end-of-game "🎉"
+                      :undo-click "⮌"
+                      :undo-turn "⮰"
+                      :run "🏃"
+                      :install "▼"
+                      :draw [:div.symbol]
+                      :credit (render-message "[credit]")
+                      :advance "A"
+                      :purge "🚨"
+                      :click (render-message "[click]")
+                      "?")]]))]
+        [:div.controls
+         [:button.small {:on-click #(change-replay-speed -200) :type "button"
+                         :title "Decrease Playback speed (-)"} "-"]
+         [:button.small {:on-click #(change-replay-speed 200) :type "button"
+                         :title "Increase Playback speed (+)"} "+"]
+         [:button.small {:on-click #(run-replay-step! replay/replay-step-backward!) :type "button"
+                         :title "Rewind one click (Ctrl + ← )"} "⏮︎"]
+         [:button.small {:on-click #(run-replay-step! replay/replay-log-backward!) :type "button"
+                         :title "Rewind one log entry (←)"} "⏪︎"]
+         [:button.small {:on-click #(toggle-play-pause) :type "button"
+                         :title (if (:autoplay @replay-status) "Pause (Space)" "Play (Space)")} (if (:autoplay @replay-status) "⏸ " "▶ ")]
+         [:button.small {:on-click #(run-replay-step! replay/replay-log-forward!) :type "button"
+                         :title "Forward to next log entry (→)"} "⏩︎"]
+         [:button.small {:on-click #(run-replay-step! replay/replay-step-forward!) :type "button"
+                         :title "Forward one click (Ctrl + → )"} "⏭︎"]]
+        (when (and (not= "local-replay" (:gameid @game-state))
+                   (:replay-shared @game-state))
+          [:div.sharing
+           [:input {:style (if @show-replay-link {:display "inline"} {:display "none"})
+                    :type "text" :read-only true
+                    :value (generate-replay-link (.-origin (.-location js/window)))}]
+           [:button {:on-click #(start-replay-game)} [tr-span [:replay_start-new-game "Start new game at this point"]]]
+           [:button {:on-click #(swap! show-replay-link not)} [tr-span [:replay_share-timestamp "Share timestamp"]]]])])}))
 
 (defn get-remote-annotations [gameid]
   (go (let [{:keys [status json]} (<! (GET (str "/profile/history/annotations/" gameid)))]
@@ -214,17 +214,17 @@
                    (assoc anno :deletable
                           (or
                             ; Author of annotations
-                           (= (get-in @app-state [:user :username])
-                              (:username anno))
+                            (= (get-in @app-state [:user :username])
+                               (:username anno))
                             ; Player in replay
-                           (or (= (get-in @app-state [:user :username])
-                                  (get-in @game-state [:corp :user :username]))
-                               (= (get-in @app-state [:user :username])
-                                  (get-in @game-state [:runner :user :username])))))))
+                            (or (= (get-in @app-state [:user :username])
+                                   (get-in @game-state [:corp :user :username]))
+                                (= (get-in @app-state [:user :username])
+                                   (get-in @game-state [:runner :user :username])))))))
           ; Error handling does not work, as GET tries to parse something despite the connection
           ; timing out -- lostgeek (2021/02/14)
           (tr-non-game-toast  [:log_remote-annotations-fail "Could not get remote annotations."]
-                              "error" {:time-out 3 :close-button true})))))
+                             "error" {:time-out 3 :close-button true})))))
 
 (defn load-remote-annotations [pos]
   (let [anno (nth (:remote-annotations @replay-status) pos)]
@@ -238,8 +238,8 @@
 
 (defn publish-annotations []
   (go (let [{:keys [status json]} (<! (PUT (str "/profile/history/annotations/publish/" (:gameid @game-state))
-                                        (assoc (:annotations @replay-status) :date (.getTime (js/Date.)))
-                                        :json))]
+                                           (assoc (:annotations @replay-status) :date (.getTime (js/Date.)))
+                                           :json))]
         (if (= 200 status)
           (get-remote-annotations (:gameid @game-state))))))
 
@@ -310,13 +310,13 @@
                                      :data-i18n-key :annotations_turn-placeholder
                                      :on-change #(update-notes)}]]
    (letfn
-    [(create-buttons [types]
-       (doall (for [icon types]
-                ^{:key (str "notes-icon-" icon)}
-                [:div {:class ["notes-icon" icon (when (= icon (:selected-note-type @replay-status)) "selected")]
-                       :title (capitalize (subs (str icon) 1))
-                       :on-click #(do (swap! replay-status assoc :selected-note-type icon)
-                                      (update-notes))}])))]
+     [(create-buttons [types]
+        (doall (for [icon types]
+                 ^{:key (str "notes-icon-" icon)}
+                 [:div {:class ["notes-icon" icon (when (= icon (:selected-note-type @replay-status)) "selected")]
+                        :title (capitalize (subs (str icon) 1))
+                        :on-click #(do (swap! replay-status assoc :selected-note-type icon)
+                                       (update-notes))}])))]
      [:div.notes-icons
       (create-buttons [:none])
       [:div.notes-separator]
@@ -338,14 +338,14 @@
           [tr-span [:annotations_no-published-annotations "No published annotations."]]
           [:ul
            (doall
-            (for [[n anno] (map-indexed vector (:remote-annotations @replay-status))]
-              ^{:key (str "annotation-" n)}
-              [:li
-               [:a {:on-click #(load-remote-annotations n)} (:username anno)]
-               " - " (.toLocaleDateString (js/Date. (:date anno))) " "
-               (when (:deletable anno)
-                 [:button.small {:type "button"
-                                 :on-click #(delete-remote-annotations n)} "X"])]))])
+             (for [[n anno] (map-indexed vector (:remote-annotations @replay-status))]
+               ^{:key (str "annotation-" n)}
+               [:li
+                [:a {:on-click #(load-remote-annotations n)} (:username anno)]
+                " - " (.toLocaleDateString (js/Date. (:date anno))) " "
+                (when (:deletable anno)
+                  [:button.small {:type "button"
+                                  :on-click #(delete-remote-annotations n)} "X"])]))])
         [:div.button-row
          [:button {:type "button"
                    :on-click #(publish-annotations)}

@@ -1,20 +1,20 @@
 (ns nr.pending-game
   (:require
-   [jinteki.validator :refer [singleton-deck? trusted-deck-status]]
-   [jinteki.preconstructed :refer [matchup-by-key]]
-   [nr.appstate :refer [app-state current-gameid]]
-   [nr.cardbrowser :refer [image-url] :as cb]
-   [nr.deck-status :refer [deck-format-status-span]]
-   [nr.deckbuilder :refer [deck-name]]
-   [nr.lobby-chat :refer [lobby-chat]]
-   [nr.player-view :refer [player-view]]
-   [nr.translations :refer [tr tr-element tr-element-with-embedded-content tr-span tr-side]]
-   [nr.utils :refer [cond-button format-date-time mdy-formatter
-                     tr-non-game-toast non-game-toast]]
-   [nr.ws :as ws]
-   [reagent-modals.modals :as reagent-modals]
-   [reagent.core :as r]
-   [taoensso.sente :as sente]))
+    [jinteki.validator :refer [singleton-deck? trusted-deck-status]]
+    [jinteki.preconstructed :refer [matchup-by-key]]
+    [nr.appstate :refer [app-state current-gameid]]
+    [nr.cardbrowser :refer [image-url] :as cb]
+    [nr.deck-status :refer [deck-format-status-span]]
+    [nr.deckbuilder :refer [deck-name]]
+    [nr.lobby-chat :refer [lobby-chat]]
+    [nr.player-view :refer [player-view]]
+    [nr.translations :refer [tr tr-element tr-element-with-embedded-content tr-span tr-side]]
+    [nr.utils :refer [cond-button format-date-time mdy-formatter
+                      tr-non-game-toast non-game-toast]]
+    [nr.ws :as ws]
+    [reagent-modals.modals :as reagent-modals]
+    [reagent.core :as r]
+    [taoensso.sente :as sente]))
 
 (defn is-constructed?
   "Games using the starter decks are not constructed"
@@ -60,21 +60,21 @@
          [tr-element :h3 [:lobby_select-title "Select your deck"]]
          [:div.deck-collection.lobby-deck-selector
           (doall
-           (for [deck (->> @decks
-                           (filter same-side?)
-                           (filter singleton-fn?)
-                           (filter #(legal? % fmt))
-                           (sort-by :date)
-                           (reverse))]
-             [:div.deckline {:key (:_id deck)
-                             :on-click #(select-deck deck)}
-              [:img {:src (image-url (:identity deck))
-                     :alt (get-in deck [:identity :title] "")}]
-              [:div.float-right [deck-format-status-span deck fmt true]]
-              [:h4 (:name deck)]
-              [:div.float-right
-               (format-date-time mdy-formatter (:date deck))]
-              [:p (get-in deck [:identity :title])]]))]]
+            (for [deck (->> @decks
+                            (filter same-side?)
+                            (filter singleton-fn?)
+                            (filter #(legal? % fmt))
+                            (sort-by :date)
+                            (reverse))]
+              [:div.deckline {:key (:_id deck)
+                              :on-click #(select-deck deck)}
+               [:img {:src (image-url (:identity deck))
+                      :alt (get-in deck [:identity :title] "")}]
+               [:div.float-right [deck-format-status-span deck fmt true]]
+               [:h4 (:name deck)]
+               [:div.float-right
+                (format-date-time mdy-formatter (:date deck))]
+               [:p (get-in deck [:identity :title])]]))]]
         [:div
          [tr-element :h3 [:lobby_no-valid-decks "You do not have any decks that are valid for this format"]]
          [tr-element :h3 [:lobby_no-valid-decks-format (str "This lobby is for the " fmt " format")] {:format fmt}]
@@ -130,15 +130,15 @@
         [tr-span [:lobby_swap "Swap sides"]]
         [:b.caret]]
        (into
-        [:ul.dropdown-menu.blue-shade]
-        (for [side ["Any Side" "Corp" "Runner"]]
-          (let [is-player-side (= side (-> @players first :side))]
-            [:a.block-link
-             (if is-player-side
-               {:style {:color "grey" :cursor "default"} :disabled true}
-               {:on-click #(ws/ws-send! [:lobby/swap {:gameid @gameid
-                                                      :side side}])})
-             [:li (tr-side side)]])))])))
+         [:ul.dropdown-menu.blue-shade]
+         (for [side ["Any Side" "Corp" "Runner"]]
+           (let [is-player-side (= side (-> @players first :side))]
+             [:a.block-link
+              (if is-player-side
+                {:style {:color "grey" :cursor "default"} :disabled true}
+                {:on-click #(ws/ws-send! [:lobby/swap {:gameid @gameid
+                                                       :side side}])})
+              [:li (tr-side side)]])))])))
 
 (defn button-bar [current-game user gameid players]
   [:div.button-bar
@@ -170,9 +170,9 @@
   [:<>
    [tr-element :h3 [:lobby_players "Players"]]
    (into
-    [:div.players]
-    (map (fn [player] [player-item user current-game player])
-         @players))])
+     [:div.players]
+     (map (fn [player] [player-item user current-game player])
+          @players))])
 
 (defn options-list [current-game]
   (let [{:keys [allow-spectator api-access password
