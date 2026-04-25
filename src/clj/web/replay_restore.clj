@@ -31,28 +31,39 @@
       (doseq [card (get-in @state [side :hand])]
         (move state side card :deck {:suppress-event true :force true})))))
 
-(defn move-card-to-path [game side target-card path]
+(defn restore-card [game side target-card path]
   (let [state (:state game)
         card (find-card (:title target-card) (get-in @state [side :deck]))]
     (when-not card (throw (Exception. (str "Card " (:title target-card) " not found in deck. Check whether you selected the correct decklists."))))
     (move state side card path {:suppress-event true :force true})))
+
+(defn restore-cards-at-path [game replay-state side path cid-map]
+  (doseq [target-card (get-in @replay-state (cons side path))]
+    (let [new-card (restore-card game side target-card path)]
+      (swap! cid-map assoc (:cid target-card) (:cid new-card)))))
 
 (def zones {:runner [:hand :deck :discard :scored :rfg :play-area :current]
             :corp [:hand :deck :discard :scored :rfg :play-area :current]})
 
 (defn restore-basic-zones [game replay-state cid-map]
   (doseq [side [:corp :runner]
-          zone (side zones)
-          target-card (get-in @replay-state [side zone])]
-    (let [new-card (move-card-to-path game side target-card [zone])]
-      (swap! cid-map assoc (:cid target-card) (:cid new-card)))))
+          zone (side zones)]
+    (restore-cards-at-path game replay-state side [zone] cid-map)))
+
+(defn restore-installed-zones [game replay-state cid-map]
+  (doseq [server (keys (get-in @replay-state [:corp :servers]))]
+    (restore-cards-at-path game replay-state :corp [:servers server :content] cid-map)
+    (restore-cards-at-path game replay-state :corp [:servers server :ices] cid-map))
+  (doseq [rig-zone [:program :hardware :resource :facedown]]
+    (restore-cards-at-path game replay-state :runner [:rig rig-zone] cid-map)))
 
 (defn setup-state-from-replay [game replay-deps]
   (let [replay-state (:game-state replay-deps)
         cid-map (atom {})]
     (check-for-correct-ids game replay-state)
     (move-all-cards-to-decks game)
-    (restore-basic-zones game replay-state cid-map)))
+    (restore-basic-zones game replay-state cid-map)
+    (restore-installed-zones game replay-state cid-map)))
 
 (defn handle-replay-state
   [game {:keys [replay]} replay-timestamp]
