@@ -252,14 +252,6 @@
     {:style {:display (if (:api-access @options) "block" "none")}}
     [tr-element :p [:lobby_api-access-details "This allows access to information about your game to 3rd party extensions. Requires an API Key to be created in Settings."]]]])
 
-(defn replay-section [replay-id]
-  [:<>
-   [:div.infobox.blue-shade
-    {:style {:display (if (empty? @replay-id) "none" "block")}}
-    [tr-element :p [:lobby_replay_restoration_beta "BETA Functionality: This lobby will attempt to start the game at the selected game state in the replay."]]
-    [tr-element :p [:lobby_replay_restoration_explanation "This feature is not able to fully restore game states. Expect certain functionality to be broken and needing manual fixing. Especially certain trigger contexts (e.g. whether the Runner has made a run last turn, whether a card has been trashed, ...) will be missing."]]
-    [tr-element :p [:lobby_replay_restoration_deck_selection "You will need to select the exact decks that have been used in the replay."]]]])
-
 (defn options-section [options user]
   [:section
    [tr-element :h3 [:lobby_options "Options"]]
@@ -295,8 +287,7 @@
                gateway-type (r/cursor state [:gateway-type])
                fmt (r/cursor state [:format])
                description (r/cursor state [:description])
-               flash-message (r/cursor state [:flash-message])
-               replay-id (r/cursor options [:replay-id])]
+               flash-message (r/cursor state [:flash-message])]
     (fn [lobby-state user]
       [:div
        [button-bar state lobby-state options]
@@ -312,5 +303,4 @@
         [side-section side]
         [format-section fmt options gateway-type precon]
         [description-section description]
-        [replay-section replay-id]
         [options-section options user]]])))
