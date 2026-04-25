@@ -35,7 +35,7 @@
         target-cards (get-in @replay-state [side zone])]
     (doseq [target-card target-cards]
       (let [card (find-card (:title target-card) (get-in @state [side :deck]))]
-        ; TODO: Handle the case where the card is not found in the deck
+        (when-not card (throw (Exception. (str "Card " (:title target-card) " not found in deck. Check whether you selected the correct decklists."))))
         (move state side card zone {:suppress-event true :force true})))))
 
 (def zones {:runner [:hand :deck :discard :scored :rfg :play-area :current]
