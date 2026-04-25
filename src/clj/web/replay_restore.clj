@@ -25,29 +25,34 @@
                 (get-in @replay-state [:runner :identity :normalizedtitle]))
       (throw (Exception. "Selected Runner ID does not match replay.")))))
 
-(defn move-all-cards-to-decks [game side]
-  (let [state (:state game)]
-    (doseq [card (get-in @state [side :hand])]
-      (move state side card :deck {:suppress-event true :force true}))))
+(defn move-all-cards-to-decks [game]
+  (doseq [side [:corp :runner]]
+    (let [state (:state game)]
+      (doseq [card (get-in @state [side :hand])]
+        (move state side card :deck {:suppress-event true :force true})))))
 
-(defn move-cards-to-zone [game replay-state side zone]
+(defn move-card-to-path [game side target-card path]
   (let [state (:state game)
-        target-cards (get-in @replay-state [side zone])]
-    (doseq [target-card target-cards]
-      (let [card (find-card (:title target-card) (get-in @state [side :deck]))]
-        (when-not card (throw (Exception. (str "Card " (:title target-card) " not found in deck. Check whether you selected the correct decklists."))))
-        (move state side card zone {:suppress-event true :force true})))))
+        card (find-card (:title target-card) (get-in @state [side :deck]))]
+    (when-not card (throw (Exception. (str "Card " (:title target-card) " not found in deck. Check whether you selected the correct decklists."))))
+    (move state side card path {:suppress-event true :force true})))
 
 (def zones {:runner [:hand :deck :discard :scored :rfg :play-area :current]
             :corp [:hand :deck :discard :scored :rfg :play-area :current]})
 
+(defn restore-basic-zones [game replay-state cid-map]
+  (doseq [side [:corp :runner]
+          zone (side zones)
+          target-card (get-in @replay-state [side zone])]
+    (let [new-card (move-card-to-path game side target-card [zone])]
+      (swap! cid-map assoc (:cid target-card) (:cid new-card)))))
+
 (defn setup-state-from-replay [game replay-deps]
-  (let [replay-state (:game-state replay-deps)]
+  (let [replay-state (:game-state replay-deps)
+        cid-map (atom {})]
     (check-for-correct-ids game replay-state)
-    (doseq [side [:corp :runner]]
-      (move-all-cards-to-decks game side)
-      (doseq [zone (side zones)]
-        (move-cards-to-zone game replay-state side zone)))))
+    (move-all-cards-to-decks game)
+    (restore-basic-zones game replay-state cid-map)))
 
 (defn handle-replay-state
   [game {:keys [replay]} replay-timestamp]

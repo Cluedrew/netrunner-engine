@@ -299,8 +299,8 @@
                                 :singleton false
                                 :spectatorhands false
                                 :open-decklists false
-                                :replay-id "b516ee76-bab7-47f7-9f3c-cae1f45493f1"
-                                :replay-timestamp {:n 4 :d 0}
+                                :replay-id "20b8f444-eac7-4e6d-986d-1c053313bc2a"
+                                :replay-timestamp {:n 145 :d 0}
                                 :timed false
                                 :timer nil})
                title (r/cursor state [:title])
