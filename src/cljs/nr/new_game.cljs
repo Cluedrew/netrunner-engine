@@ -254,7 +254,6 @@
 
 (defn replay-section [replay-id]
   [:<>
-   [tr-element :h4 [:lobby_replay_restoration_title "Replay Restoration"]]
    [:div.infobox.blue-shade
     {:style {:display (if (empty? @replay-id) "none" "block")}}
     [tr-element :p [:lobby_replay_restoration_beta "BETA Functionality: This lobby will attempt to start the game at the selected game state in the replay."]]

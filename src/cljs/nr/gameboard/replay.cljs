@@ -8,6 +8,7 @@
    [nr.appstate :refer [app-state]]
    [nr.gameboard.state :refer [game-state last-state replay-side]]
    [nr.local-storage :as ls]
+   [nr.new-game :refer [create-game]]
    [nr.translations :refer [tr tr-span tr-element]]
    [nr.utils :refer [tr-non-game-toast render-message]]
    [nr.ws :as ws]
@@ -18,6 +19,15 @@
 (defonce show-replay-link (r/atom false))
 
 (declare load-notes get-remote-annotations)
+
+(defn leave-game! []
+  (reset! game-state nil)
+  (swap! app-state assoc :gameid nil)
+  (swap! app-state dissoc :current-game :start-shown)
+  (set! (.-cursor (.-style (.-body js/document))) "default")
+  (set! (.-onbeforeunload js/window) nil)
+  (-> "#gameboard" js/$ .fadeOut)
+  (-> "#gamelobby" js/$ .fadeIn))
 
 (defn replay-deps []
   {:app-state app-state
@@ -89,6 +99,30 @@
   (let [log (-> @game-state :log last :text)]
     (or (= log "typing")
         (s/includes? log "joined the game"))))
+
+(defn start-replay-game []
+  (let [lobby-state (atom {:room "casual"})
+        state (atom {:flash-message ""
+                     :format "casual"
+                     :room "casual"
+                     :side "Any Side"
+                     :gateway-type "Beginner"
+                     :precon "worlds-2012-a"
+                     :title "Replay game"})
+        options (atom {:allow-spectator true
+                       :api-access false
+                       :password ""
+                       :protected false
+                       :save-replay false
+                       :singleton false
+                       :spectatorhands false
+                       :open-decklists false
+                       :replay-id (:gameid @game-state)
+                       :replay-timestamp @replay-status
+                       :timed false
+                       :timer nil})]
+    (leave-game!)
+    (create-game state lobby-state options)))
 
 (defn replay-panel []
   (go (while true
@@ -169,6 +203,7 @@
           [:input {:style (if @show-replay-link {:display "inline"} {:display "none"})
                    :type "text" :read-only true
                    :value (generate-replay-link (.-origin (.-location js/window)))}]
+          [:button {:on-click #(start-replay-game)} [tr-span [:replay_start-new-game "Start new game at this point"]]]
           [:button {:on-click #(swap! show-replay-link not)} [tr-span [:replay_share-timestamp "Share timestamp"]]]])])}))
 
 (defn get-remote-annotations [gameid]

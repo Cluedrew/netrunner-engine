@@ -60,21 +60,21 @@
          [tr-element :h3 [:lobby_select-title "Select your deck"]]
          [:div.deck-collection.lobby-deck-selector
           (doall
-            (for [deck (->> @decks
-                            (filter same-side?)
-                            (filter singleton-fn?)
-                            (filter #(legal? % fmt))
-                            (sort-by :date)
-                            (reverse))]
-              [:div.deckline {:key (:_id deck)
-                              :on-click #(select-deck deck)}
-               [:img {:src (image-url (:identity deck))
-                      :alt (get-in deck [:identity :title] "")}]
-               [:div.float-right [deck-format-status-span deck fmt true]]
-               [:h4 (:name deck)]
-               [:div.float-right
-                (format-date-time mdy-formatter (:date deck))]
-               [:p (get-in deck [:identity :title])]]))]]
+           (for [deck (->> @decks
+                           (filter same-side?)
+                           (filter singleton-fn?)
+                           (filter #(legal? % fmt))
+                           (sort-by :date)
+                           (reverse))]
+             [:div.deckline {:key (:_id deck)
+                             :on-click #(select-deck deck)}
+              [:img {:src (image-url (:identity deck))
+                     :alt (get-in deck [:identity :title] "")}]
+              [:div.float-right [deck-format-status-span deck fmt true]]
+              [:h4 (:name deck)]
+              [:div.float-right
+               (format-date-time mdy-formatter (:date deck))]
+              [:p (get-in deck [:identity :title])]]))]]
         [:div
          [tr-element :h3 [:lobby_no-valid-decks "You do not have any decks that are valid for this format"]]
          [tr-element :h3 [:lobby_no-valid-decks-format (str "This lobby is for the " fmt " format")] {:format fmt}]
@@ -176,7 +176,7 @@
 
 (defn options-list [current-game]
   (let [{:keys [allow-spectator api-access password
-                save-replay spectatorhands timer]} @current-game]
+                save-replay spectatorhands timer replay-id replay-timestamp]} @current-game]
     [:<>
      [tr-element :h3 [:lobby_options "Options"]]
      [:ul.options
@@ -195,6 +195,14 @@
           [tr-element :p [:lobby_save-replay-details "This will save a replay file of this match with open information (e.g. open cards in hand). The file is available only after the game is finished."]]
           [tr-element :p [:lobby_save-replay-unshared "Only your latest 15 unshared games will be kept, so make sure to either download or share the match afterwards."]]
           [tr-element :p [:lobby_save-replay-beta "BETA Functionality: Be aware that we might need to reset the saved replays, so make sure to download games you want to keep. Also, please keep in mind that we might need to do future changes to the site that might make replays incompatible."]]]])
+      (when (and replay-id replay-timestamp)
+        [:<>
+         [tr-element :li [:lobby_replay-restoration "Replay Restoration"]]
+         [:div.infobox.blue-shade
+          {:style {:display (if (empty? replay-id) "none" "block")}}
+          [tr-element :p [:lobby_replay_restoration_beta "BETA Functionality: This lobby will attempt to start the game at the selected game state in the replay."]]
+          [tr-element :p [:lobby_replay_restoration_explanation "This feature is not able to fully restore game states. Expect certain functionality to be broken and needing manual fixing. Especially certain trigger contexts (e.g. whether the Runner has made a run last turn, whether a card has been trashed, ...) will be missing."]]
+          [tr-element :p [:lobby_replay_restoration_deck_selection "You will need to select the exact decks that have been used in the replay."]]]])
       (when api-access
         [tr-element :li [:lobby_api-access "Allow API access to game information"]])]]))
 
