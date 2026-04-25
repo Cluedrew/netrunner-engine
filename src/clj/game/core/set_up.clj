@@ -80,7 +80,7 @@
 
 (defn- init-game-state
   "Initialises the game state"
-  [{:keys [players gameid timer spectatorhands api-access save-replay room] :as game}]
+  [{:keys [players gameid timer spectatorhands api-access save-replay room replay-id] :as game}]
   (let [corp (some #(when (corp? %) %) players)
         runner (some #(when (runner? %) %) players)
         corp-deck (create-deck (:deck corp))
@@ -101,17 +101,18 @@
         runner-quote (quotes/make-quote runner-identity corp-identity)
         fmt (:format game)]
     (atom
-      (new-state
-        gameid
-        room
-        fmt
-        (inst/now)
-        {:timer timer
-         :spectatorhands spectatorhands
-         :api-access api-access
-         :save-replay save-replay}
-        (new-corp (:user corp) corp-identity corp-options (map #(assoc % :zone [:deck]) corp-deck) corp-deck-id corp-quote)
-        (new-runner (:user runner) runner-identity runner-options (map #(assoc % :zone [:deck]) runner-deck) runner-deck-id runner-quote)))))
+     (new-state
+      gameid
+      room
+      fmt
+      (inst/now)
+      {:timer timer
+       :spectatorhands spectatorhands
+       :api-access api-access
+       :replay-id replay-id
+       :save-replay save-replay}
+      (new-corp (:user corp) corp-identity corp-options (map #(assoc % :zone [:deck]) corp-deck) corp-deck-id corp-quote)
+      (new-runner (:user runner) runner-identity runner-options (map #(assoc % :zone [:deck]) runner-deck) runner-deck-id runner-quote)))))
 
 (defn- create-basic-action-cards
   [state]
@@ -167,13 +168,14 @@
     (implementation-msg state runner-identity)
     (create-basic-action-cards state)
     (fake-checkpoint state)
-    (let [eid (make-eid state)]
-      (wait-for
-        (check-quick-draft state (:format game))
-        (wait-for (trigger-event-sync state :corp :pre-start-game nil)
-                  (wait-for (trigger-event-sync state :runner :pre-start-game nil)
-                            (init-hands state)
-                            (fake-checkpoint state)
-                            (effect-completed state nil eid)))))
+    (when-not (get-in @state [:options :replay-id])
+      (let [eid (make-eid state)]
+        (wait-for
+         (check-quick-draft state (:format game))
+         (wait-for (trigger-event-sync state :corp :pre-start-game nil)
+                   (wait-for (trigger-event-sync state :runner :pre-start-game nil)
+                             (init-hands state)
+                             (fake-checkpoint state)
+                             (effect-completed state nil eid))))))
     (swap! state assoc :history [(:hist-state (public-states state))])
     state))
