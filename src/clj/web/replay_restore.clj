@@ -160,6 +160,12 @@
       (when-let [keep (get-in @replay-state [side :keep])]
         (swap! state assoc-in [side :keep] keep)))))
 
+(defn- restore-turn-state [game replay-state]
+  (let [state (:state game)
+        restored (select-keys @replay-state [:active-player :end-turn :turn])
+        restored (assoc restored :active-player (to-keyword (:active-player restored)))]
+    (swap! state merge restored)))
+
 (defn setup-state-from-replay [game replay-deps]
   (let [replay-state (:game-state replay-deps)
         cid-map (atom {})]
@@ -169,6 +175,7 @@
     (restore-installed-zones game replay-state cid-map)
     (restore-hosted-cards game replay-state cid-map)
     (restore-player-states game replay-state)
+    (restore-turn-state game replay-state)
     (restore-engine-hooks game)
     (restore-player-hand-kept game replay-state)))
 
