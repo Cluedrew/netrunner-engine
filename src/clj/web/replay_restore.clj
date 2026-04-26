@@ -180,7 +180,7 @@
     (restore-player-hand-kept game replay-state)))
 
 (defn handle-replay-state
-  [game [replay] [n]]
+  [game {:keys [replay]} {:keys [n]}]
   (when (and replay n)
     (let [history (read-json replay true)
           replay-state (replay-deps game)]
