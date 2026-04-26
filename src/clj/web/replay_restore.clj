@@ -82,11 +82,23 @@
                     (not (contains? replay-card :rezzed)) (dissoc :rezzed)
                     (contains? replay-card :facedown) (assoc :facedown (:facedown replay-card))
                     (not (contains? replay-card :facedown)) (dissoc :facedown)
+                    (contains? replay-card :seen) (assoc :seen (:seen replay-card))
+                    (not (contains? replay-card :seen)) (dissoc :seen)
+                    (contains? replay-card :new) (assoc :new (:new replay-card))
+                    (not (contains? replay-card :new)) (dissoc :new)
                     (contains? replay-card :counter) (assoc :counter (:counter replay-card))
                     (not (contains? replay-card :counter)) (dissoc :counter)
                     (contains? replay-card :advance-counter) (assoc :advance-counter (:advance-counter replay-card))
                     (not (contains? replay-card :advance-counter)) (dissoc :advance-counter))]
       (update! state (to-keyword (:side live-card)) updated))))
+
+(defn- restore-basic-zone-card-states [game replay-state cid-map]
+  (let [state (:state game)]
+    (doseq [side [:corp :runner]
+            zone (get zones side)
+            replay-card (get-in @replay-state (list* side [zone]))]
+      (when-let [{:keys [card]} (find-live-card state replay-card cid-map)]
+        (restore-card-state state card replay-card)))))
 
 (defn- restore-hosted-tree
   ([state live-host replay-host cid-map]
@@ -173,6 +185,7 @@
     (move-all-cards-to-decks game)
     (restore-basic-zones game replay-state cid-map)
     (restore-installed-zones game replay-state cid-map)
+    (restore-basic-zone-card-states game replay-state cid-map)
     (restore-hosted-cards game replay-state cid-map)
     (restore-player-states game replay-state)
     (restore-turn-state game replay-state)
