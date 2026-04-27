@@ -986,7 +986,7 @@
 (defmethod choose-access :hq
   [{:keys [total-mod] :as access-amount} _ {:keys [no-root] :as args}]
   {:async true
-   :effect (req (wait-for (trigger-event-sync state side :candidates-determined :hq)
+   :effect (req (wait-for (trigger-event-sync state side :candidates-determined {:breached-server :hq})
                           (let [only-card (get-only-card-to-access state)
                                 max-access (:max-access (:run @state))
                                 total-cards (or (when only-card [only-card])

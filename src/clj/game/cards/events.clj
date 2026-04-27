@@ -3414,7 +3414,7 @@
                                 [{:event :candidates-determined
                                   :duration :end-of-run
                                   :async true
-                                  :req (req (= :hq context))
+                                  :req (req (= :hq (:breached-server context)))
                                   :effect (effect (continue-ability add-cards-from-heap card nil))}]))}]}))
 
 (defcard "Ritual"

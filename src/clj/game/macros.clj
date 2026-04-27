@@ -22,12 +22,7 @@
                         (contains? t :value))
                  (:value t)
                  t))
-      context (let [t (first targets)]
-                (if (and (map? t)
-                         (contains? t :uuid)
-                         (contains? t :value))
-                  (:value t)
-                  t))
+      context (first targets)
       installed (#{:rig :servers} (first (game.core.card/get-zone card)))
       remotes (game.core.board/get-remote-names state)
       servers (game.core.servers/zones->sorted-names (game.core.board/get-zones state))
