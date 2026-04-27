@@ -328,6 +328,8 @@
   {:additional-cost [(->c :trash-other-installed 1)]
    :on-score {:async true
               :msg "do 2 meat damage"
+              :automatic :damage
+              :interactive (req true)
               :effect (effect (damage eid :meat 2 {:card card}))}})
 
 (defcard "Bacterial Programming"
@@ -2447,7 +2449,6 @@
                          :req (req (and
                                      (not= [:hand] (:previous-zone card))
                                      (same-card? (:card target) card)))
-                         :waiting-prompt true
                          :yes-ability
                          {:msg (msg "reveal itself from " (zone->name (:previous-zone card)))
                           :async true

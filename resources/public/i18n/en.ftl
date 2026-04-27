@@ -295,6 +295,7 @@ deck-builder_new-runner = New Runner deck
 deck-builder_notes = Notes
 
 deck-builder_reset = Reset
+deck-builder_sort = Sort:
 
 deck-builder_save = Save
 
@@ -493,6 +494,16 @@ format_name = {$format ->
     [system-gateway] System Gateway
     [throwback] Throwback
     *[other] Unknown format ({$format})
+}
+
+sort_order_name = {$sort ->
+    [date-newest] Date (Newest)
+    [date-oldest] Date (Oldest)
+    [name-az] Name (A-Z)
+    [name-za] Name (Z-A)
+    [win-rate] Win Rate
+    [games-played] Games Played
+    *[other] {$sort}
 }
 
 game_abilities = Abilities
@@ -1531,9 +1542,9 @@ settings_always = Always
 
 settings_api-keys = API Keys
 
-settings_api-keys-not-updated = Updated API keys
+settings_api-keys-not-updated = Failed to update API keys
 
-settings_api-keys-updated = Fauled to update API keys
+settings_api-keys-updated = Updated API keys
 
 settings_avatar = Avatar
 
