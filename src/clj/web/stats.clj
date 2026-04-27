@@ -370,12 +370,20 @@
           (response 404 {:message "Annotations not found"})))
       (response 401 {:message "Unauthorized"}))))
 
+(defn fetch-replay-record
+  "Fetches replay-related game-log fields for a gameid."
+  [db gameid]
+  (mc/find-one-as-map db
+                      :game-logs
+                      {:gameid gameid}
+                      ["corp" "runner" "replay" "replay-shared" "bug-reported"]))
+
 (defn fetch-replay
   [{db :system/db
     {username :username} :user
     {:keys [gameid]} :path-params}]
   (let [{:keys [corp runner replay replay-shared bug-reported]}
-        (mc/find-one-as-map db :game-logs {:gameid gameid} ["corp" "runner" "replay" "replay-shared" "bug-reported"])
+        (fetch-replay-record db gameid)
         replay (or replay {})]
     (if (or bug-reported
             replay-shared
@@ -443,8 +451,8 @@
   (let [{:keys [replay winner corp runner title]} (mc/find-one-as-map db :game-logs {:gameid (or gameid bugid)})
         replay (or replay {})
         gameid-str (cond ; different string for replays and bug-reports
-                     gameid (if (and n d) (str gameid "?n=" n "&d=" d) gameid)
-                     bugid (str bugid "?bug-report" (when b (str "&b=" b))))]
+                         gameid (if (and n d) (str gameid "?n=" n "&d=" d) gameid)
+                         bugid (str bugid "?bug-report" (when b (str "&b=" b))))]
     (if (empty? replay)
       (response 404 {:message "Replay not found"})
       (let [corp-user (get-in corp [:player :username] "Unknown")

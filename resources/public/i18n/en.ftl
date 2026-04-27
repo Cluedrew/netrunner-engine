@@ -1043,6 +1043,14 @@ lobby_replay-invalid-file = Select a valid replay file.
 
 lobby_replay-link-error = Replay link invalid.
 
+lobby_replay-restoration = Replay Restoration
+
+lobby_replay_restoration_beta = BETA Functionality: This lobby will attempt to start the game at the selected game state in the replay.
+
+lobby_replay_restoration_deck_selection = You will need to select the exact decks that have been used in the replay.
+
+lobby_replay_restoration_explanation = This feature is not able to fully restore game states. Expect certain functionality to be broken and needing manual fixing. Especially certain trigger contexts (e.g. whether the Runner has made a run last turn, whether a card has been trashed, ...) will be missing.
+
 lobby_reset = Reset Game Name
 
 lobby_runner-perspective = Runner Perspective
@@ -1389,6 +1397,8 @@ pronouns = {$pronoun ->
 }
 
 replay_share-timestamp = Share timestamp
+
+replay_start-new-game = Start new game at this point
 
 set_name = {$name ->
     [a23-seconds] 23 Seconds
