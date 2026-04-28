@@ -1,6 +1,6 @@
 (ns web.replay-restore
   (:require
-    [clojure.data.json :refer [read-json]]
+    [cheshire.core :as json]
     [game.core.card :refer [get-card]]
     [game.core.effects :refer [unregister-static-abilities]]
     [game.core.engine :refer [unregister-events]]
@@ -195,7 +195,7 @@
 (defn handle-replay-state
   [game {:keys [replay]} {:keys [n]}]
   (when (and replay n)
-    (let [history (read-json replay true)
+    (let [history (json/parse-string replay true)
           replay-state (replay-deps game)]
       (reset! (:game-state replay-state) (replay/replay-init-state-from-history history (:gameid game)))
       (replay/populate-replay-timeline! replay-state @(:game-state replay-state))
