@@ -142,7 +142,7 @@
   ([state side card trace] (init-trace state side (make-eid state {:source-type :trace}) card trace))
   ([state side eid card {:keys [base] :as trace}]
    (reset-trace-modifications state)
-   (wait-for (trigger-event-sync state :corp :initialize-trace card eid)
+   (wait-for (trigger-event-sync state :corp :initialize-trace nil)
              (let [force-base (get-in @state [:trace :force-base])
                    force-link (first (get-effects state :corp :trace-force-link card [eid]))
                    base (cond force-base force-base

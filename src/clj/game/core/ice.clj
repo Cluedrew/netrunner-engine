@@ -400,7 +400,7 @@
                           (map-indexed (fn [idx sub] (assoc sub :index idx)))
                           (into []))]
         (update! state side (assoc ice :subroutines new-subs))
-        (trigger-event state side :subroutines-changed (get-card state ice))
+        (trigger-event state side :subroutines-changed nil)
         true)))))
 
 (defn update-ice-in-server
