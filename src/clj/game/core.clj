@@ -828,7 +828,6 @@
 (expose-vars
   [game.macros
    continue-ability
-   effect
    msg
    req
    wait-for

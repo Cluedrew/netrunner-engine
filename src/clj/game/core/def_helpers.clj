@@ -28,7 +28,7 @@
     [game.core.to-string :refer [card-str]]
     [game.core.toasts :refer [toast]]
     [game.core.tags :refer [gain-tags]]
-    [game.macros :refer [continue-ability effect msg req wait-for]]
+    [game.macros :refer [continue-ability msg req wait-for]]
     [game.utils :refer [enumerate-cards remove-once same-card? server-card to-keyword quantify]]
     [jinteki.utils :refer [faction-label other-side]]))
 
@@ -131,7 +131,7 @@
            (:req args)
            (req (= server (:server context))))
     :msg msg
-    :effect (effect (access-bonus :runner server bonus))}))
+    :effect (req (access-bonus state :runner server bonus))}))
 
 (defn do-net-damage
   "Do specified amount of net-damage."
@@ -139,7 +139,7 @@
   {:label (str "Do " dmg " net damage")
    :async true
    :msg (str "do " dmg " net damage")
-   :effect (effect (damage eid :net dmg {:card card}))})
+   :effect (req (damage state side eid :net dmg {:card card}))})
 
 (defn do-meat-damage
   "Do specified amount of meat damage."
@@ -147,7 +147,7 @@
   {:label (str "Do " dmg " meat damage")
    :async true
    :msg (str "do " dmg " meat damage")
-   :effect (effect (damage eid :meat dmg {:card card}))})
+   :effect (req (damage state side eid :meat dmg {:card card}))})
 
 (defn do-brain-damage
   "Do specified amount of core damage."
@@ -155,7 +155,7 @@
   {:label (str "Do " dmg " core damage")
    :async true
    :msg (str "do " dmg " core damage")
-   :effect (effect (damage eid :brain dmg {:card card}))})
+   :effect (req (damage state side eid :brain dmg {:card card}))})
 
 (defn rfg-on-empty
   "Used in :event maps for effects like Malandragem"
@@ -164,8 +164,8 @@
    :req (req (and (same-card? card (:card context))
                   (not (get-in card [:special :skipped-loading]))
                   (not (pos? (get-counters card counter-type)))))
-   :effect (effect (system-msg (str "removes " (:title card) " from the game"))
-                   (move card :rfg))})
+   :effect (req (system-msg state side (str "removes " (:title card) " from the game"))
+                   (move state side card :rfg))})
 
 (defn trash-on-empty
   "Used in :event maps for effects like Daily Casts"
@@ -175,8 +175,8 @@
                   (not (get-in card [:special :skipped-loading]))
                   (not (pos? (get-counters card counter-type)))))
    :async true
-   :effect (effect (system-msg (str "trashes " (:title card)))
-                   (trash eid card {:unpreventable true :source-card card}))})
+   :effect (req (system-msg state side (str "trashes " (:title card)))
+                   (trash state side eid card {:unpreventable true :source-card card}))})
 
 (defn pick-tiered-sfx
   [base upper-limit n]
@@ -216,7 +216,7 @@
    :msg (str "give the Runner " (quantify n "tag"))
    :interactive (req true)
    :async true
-   :effect (effect (gain-tags :corp eid n))})
+   :effect (req (gain-tags state :corp eid n))})
 
 (defn run-server-ability
   "Runs a target server, if possible. "
@@ -258,7 +258,7 @@
    :choices (req (filter #(can-run-server? state %) remotes))
    :label "Run a remote server"
    :msg (msg "make a run on " target)
-   :effect (effect (make-run eid target card))})
+   :effect (req (make-run state side eid target card))})
 
 (def run-central-server-ability
   {:prompt "Choose a central server"
@@ -267,7 +267,7 @@
    :async true
    :label "Run a central server"
    :msg (msg "make a run on " target)
-   :effect (effect (make-run eid target card))})
+   :effect (req (make-run state side eid target card))})
 
 (defn run-server-from-choices-ability
   ([choices] (run-server-from-choices-ability choices nil))
@@ -419,9 +419,9 @@
      :prompt "Jack out?"
      :waiting-prompt true
      :yes-ability {:async true
-                   :effect (effect (system-msg :runner (str "uses " (:title card) " to jack out"))
-                                   (jack-out eid))}
-     :no-ability {:effect (effect (system-msg :runner (str "uses " (:title card) " to continue the run")))}}}))
+                   :effect (req (system-msg state :runner (str "uses " (:title card) " to jack out"))
+                                   (jack-out state side eid))}
+     :no-ability {:effect (req (system-msg state :runner (str "uses " (:title card) " to continue the run")))}}}))
 
 (defn get-x-fn []
   (fn get-x-fn-inner
@@ -518,7 +518,7 @@
                        (pred %))}
     :msg {:public (msg "add " (card-str state target {:visible (faceup? target)}) " to HQ")
           :corp (msg "add " (card-str state target {:maybe-visible true}) " to HQ")}
-    :effect (effect (move :corp target :hand))}))
+    :effect (req (move state :corp target :hand))}))
 
 (defn tutor-abi
   "Tutor a card. Optionally, pass a restriction, which is a 1-fn the cards must pass"
@@ -633,7 +633,7 @@
       :msg {:public (msg "place " (quantify qty "advancement counter") " on " (card-str state target))
             :corp (msg "place " (quantify qty "advancement counter") " on " (card-str state target {:maybe-visible true}))}
       :async true
-      :effect (effect (add-prop eid target :advance-counter qty {:placed true}))})))
+      :effect (req (add-prop state side eid target :advance-counter qty {:placed true}))})))
 
 (defn look-at-the-top
   [looking-side deck-side qty]

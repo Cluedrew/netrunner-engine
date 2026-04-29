@@ -22,7 +22,7 @@
    [game.core.say :refer [play-sfx system-msg]]
    [game.core.tags :refer [lose-tags]]
    [game.core.to-string :refer [card-str]]
-   [game.macros :refer [effect msg req wait-for]]
+   [game.macros :refer [msg req wait-for]]
    [game.utils :refer :all]
    [jinteki.utils :refer :all]))
 ;; Card definitions
@@ -94,9 +94,9 @@
                 :cost [(->c :click 1) (->c :credit 1)]
                 :async true
                 :msg (msg "advance " (card-str state (:card context)))
-                :effect (effect (update-advancement-requirement (:card context))
-                                (play-sfx "click-advance")
-                                (add-prop eid (get-card state (:card context)) :advance-counter 1))}
+                :effect (req (update-advancement-requirement state side (:card context))
+                                (play-sfx state side "click-advance")
+                                (add-prop state side eid (get-card state (:card context)) :advance-counter 1))}
                {:action true
                 :label "Trash 1 resource if the Runner is tagged"
                 :cost [(->c :click 1) (->c :credit 2)]
@@ -199,12 +199,12 @@
                {:action true
                 :label "Run any server"
                 :async true
-                :effect (effect (make-run eid (:server context) nil {:click-run true}))}
+                :effect (req (make-run state side eid (:server context) nil {:click-run true}))}
                {:action true
                 :label "Remove 1 tag"
                 :cost [(->c :click 1) (->c :credit 2)]
                 :msg "remove 1 tag"
                 :req (req tagged)
                 :async true
-                :effect (effect (play-sfx "click-remove-tag")
-                                (lose-tags eid 1))}]})
+                :effect (req (play-sfx state side "click-remove-tag")
+                                (lose-tags state side eid 1))}]})

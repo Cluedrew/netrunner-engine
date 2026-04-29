@@ -4,7 +4,7 @@
    [game.core.card :refer :all]
    [game.core.eid :refer [effect-completed]]
    [game.core.say :refer [system-msg]]
-   [game.macros :refer [req msg effect]]
+   [game.macros :refer [req msg]]
    [game.core.props :refer [add-counter]]))
 
 (defn can-charge

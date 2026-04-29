@@ -70,13 +70,6 @@
                 :when (contains? forms x)]
             (get forms x))))
 
-(defn- effect-state-handler
-  [expr]
-  (for [body expr]
-    (if (#{:runner :corp} (second body))
-      (concat [(first body) 'state (second body)] (drop 2 body))
-      (concat [(first body) 'state 'side] (rest body)))))
-
 (defmacro req [& expr]
   (let [needed-locals (find-undefined-locals expr)
         nls (emit-only needed-locals)]
@@ -85,9 +78,6 @@
                (str ":source should be a card, received: " (:source ~'eid)))
        (let [~@nls]
          ~@expr))))
-
-(defmacro effect [& expr]
-  `(req ~@(effect-state-handler expr)))
 
 (defmacro msg [& expr]
   `(req (str ~@expr)))
