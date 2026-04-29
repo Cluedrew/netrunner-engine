@@ -590,7 +590,7 @@
                     {:count n :remaining n :prevented 0 :source-player side :source-card card :uses {}})
   (if (or unpreventable (not (pos? n)))
     (complete-with-result state side eid (fetch-and-clear! state :tag))
-    (wait-for (trigger-event-simult state side :tag-interrupt nil card)
+    (wait-for (trigger-event-simult state side :tag-interrupt nil nil)
               (let [active-side (:active-player @state)
                     responding-side (other-side active-side)]
                 (wait-for
