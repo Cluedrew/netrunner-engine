@@ -338,8 +338,8 @@
      :async true
      :choices {:max (value cost)
                :all true
-               :req (req (and (is-scored? state side target)
-                              (can-forfeit? target)))}
+               :req (req (is-scored? state side target)
+                              (can-forfeit? target))}
      :effect (effect (doseq [agenda targets]
                     ;; We don't have to await this because we're suppressing the
                     ;; checkpoint and forfeit makes all of the trashing unpreventable,
@@ -406,8 +406,8 @@
                                    :async true
                                    :choices {:max 1
                                              :all true
-                                             :req (req (and (is-scored? state side target)
-                                                            (can-forfeit? target)))}
+                                             :req (req (is-scored? state side target)
+                                                            (can-forfeit? target))}
                                    :effect (effect (doseq [agenda targets]
                                                   (forfeit state side (make-eid state eid) agenda {:msg false
                                                                                                    :suppress-checkpoint true}))
@@ -846,10 +846,10 @@
     {:prompt (str "Choose " (quantify (value cost) " rezzed Bioroid" "") " to trash")
      :choices {:all true
                :max (value cost)
-               :req (req (and (installed? target)
+               :req (req (installed? target)
                               (rezzed? target)
                               (has-subtype? target "Bioroid")
-                              (= (second (get-zone target)) (first (:server (:run @state))))))}
+                              (= (second (get-zone target)) (first (:server (:run @state)))))}
      :async true
      :effect (effect (wait-for (trash-cards state side targets {:cause :ability-cost
                                                              :unpreventable true})
@@ -1225,8 +1225,8 @@
                   " to add to HQ")
      :choices {:max (value cost)
                :all true
-               :req (req (and (corp? target)
-                              (same-card? (:host target) card)))}
+               :req (req (corp? target)
+                              (same-card? (:host target) card))}
      :async true
      :effect (effect (let [cards (keep #(move state :corp % :hand) targets)]
                     (complete-with-result

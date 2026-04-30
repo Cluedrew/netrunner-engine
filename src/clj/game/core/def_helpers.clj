@@ -161,9 +161,9 @@
   "Used in :event maps for effects like Malandragem"
   [counter-type]
   {:event :counter-added
-   :req (req (and (same-card? card (:card context))
+   :req (req (same-card? card (:card context))
                   (not (get-in card [:special :skipped-loading]))
-                  (not (pos? (get-counters card counter-type)))))
+                  (not (pos? (get-counters card counter-type))))
    :effect (effect (system-msg state side (str "removes " (:title card) " from the game"))
                    (move state side card :rfg))})
 
@@ -171,9 +171,9 @@
   "Used in :event maps for effects like Daily Casts"
   [counter-type]
   {:event :counter-added
-   :req (req (and (same-card? card (:card context))
+   :req (req (same-card? card (:card context))
                   (not (get-in card [:special :skipped-loading]))
-                  (not (pos? (get-counters card counter-type)))))
+                  (not (pos? (get-counters card counter-type))))
    :async true
    :effect (effect (system-msg state side (str "trashes " (:title card)))
                    (trash state side eid card {:unpreventable true :source-card card}))})
@@ -625,11 +625,11 @@
    (let [label (str "Place " (quantify qty "advancement counter") " on " card-line (if advanceable-only " that can be advanced"))]
      {:label label
       :prompt label
-      :choices {:req (req (and (corp? target)
+      :choices {:req (req (corp? target)
                                (installed? target)
                                (or (not pred)
                                    (pred target))
-                               (or (not advanceable-only) (can-be-advanced? state target))))}
+                               (or (not advanceable-only) (can-be-advanced? state target)))}
       :msg {:public (msg "place " (quantify qty "advancement counter") " on " (card-str state target))
             :corp (msg "place " (quantify qty "advancement counter") " on " (card-str state target {:maybe-visible true}))}
       :async true

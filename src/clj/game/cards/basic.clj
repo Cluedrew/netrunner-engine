@@ -105,7 +105,7 @@
                 :prompt "Choose a resource to trash"
                 :msg (msg "trash " (:title target))
                 ;; I hate that we need to modify the basic action card like this, but I don't think there's any way around it -nbkelly, '24
-                :choices {:req (req (and (if (and (untrashable-while-resources? target)
+                :choices {:req (req (if (and (untrashable-while-resources? target)
                                                   (< (count (filter resource? (all-active-installed state :runner))) 2))
                                            true
                                            (not (untrashable-while-resources? target)))
@@ -116,7 +116,7 @@
                                                     (into [])
                                                     (merge-costs))
                                                can-pay (can-pay? state side (make-eid state (assoc eid :additional-costs additional-costs)) target (:title target) additional-costs)]
-                                           (or (empty? additional-costs) can-pay))))}
+                                           (or (empty? additional-costs) can-pay)))}
                 :effect (effect
                           (let [additional-costs (merge-costs (get-effects state side :basic-ability-additional-trash-cost target))
                                 cost-strs (build-cost-string additional-costs)

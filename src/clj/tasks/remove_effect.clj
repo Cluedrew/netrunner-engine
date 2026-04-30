@@ -9,7 +9,8 @@
   (-> "
 (defcard 
   {:abilities [{:action true
-                :req (effect (and 1
+                :req (req (and
+                           1
                                   2
                                   3))
                 :cost [(->c :click 1)]
@@ -66,8 +67,7 @@
 (comment
   (-> cutlery
       (z/prewalk effect-zloc? update-call)
-      (z/string)
-      (println)))
+      (z/string)))
 
 (defn effect-zloc? [zloc]
   (and (z/list? zloc)
@@ -77,15 +77,26 @@
 (defn update-req-fn [zloc]
   (if-let [req (z/get zloc :req)]
     (when (and (z/list? req)
-               (= 'effect (first (z/sexpr req))))
-      (-> req
-          (z/down)
-          (z/replace 'req)))
+               (= 'req (first (z/sexpr req))))
+      (let [req-v (-> req
+                     (z/down)
+                     (z/right))]
+        (when (and (z/list? req-v)
+                   (= 'and (first (z/sexpr req-v))))
+          (-> req-v
+              (z/down)
+              (z/remove)
+              (z/splice)))))
     zloc))
 
 (defn rewrite-file [zloc]
   ; (z/prewalk zloc effect-zloc? update-call)
   (z/prewalk zloc z/map? update-req-fn))
+
+(comment
+  (-> cutlery
+      (rewrite-file)
+      (z/sexpr)))
 
 (defn process-file [file]
   (->> (z/of-file file)

@@ -705,8 +705,8 @@
         (continue-ability
           state side
           {:prompt (str (:title potential-host) " can only handle " max-mu " MU of programs - trash programs on " (:title card) " worth at least " to-eliminate " MU")
-           :choices {:req (req (and (program? target)
-                                    (some #(same-card? % target) relevant-cards)))
+           :choices {:req (req (program? target)
+                                    (some #(same-card? % target) relevant-cards))
                      :max (count relevant-cards)
                      :min 1}
            :async true

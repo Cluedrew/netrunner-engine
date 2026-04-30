@@ -353,7 +353,7 @@
    (let [cost (if (number? cost) [(->c :credit cost)] cost)]
      {:on-access
       {:optional
-       {:req (req (and installed (can-pay? state :corp eid card nil cost)))
+       {:req (req installed (can-pay? state :corp eid card nil cost))
         :waiting-prompt (:waiting-prompt ability)
         :prompt prompt
         :yes-ability (dissoc ability :waiting-prompt)}}})))

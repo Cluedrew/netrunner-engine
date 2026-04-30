@@ -298,8 +298,8 @@
     :value bonus})
   ([req-fn bonus]
    {:type :ice-strength
-    :req (req (and (same-card? card target)
-                   (req-fn state side eid card targets)))
+    :req (req (same-card? card target)
+                   (req-fn state side eid card targets))
     :value bonus}))
 
 (defn sum-ice-strength-effects
@@ -459,8 +459,8 @@
     :value bonus})
   ([req-fn bonus]
    {:type :breaker-strength
-    :req (req (and (same-card? card target)
-                   (req-fn state side eid card targets)))
+    :req (req (same-card? card target)
+                   (req-fn state side eid card targets))
     :value bonus}))
 
 (defn update-breaker-strength
@@ -666,8 +666,8 @@
        (when (some #(= :trash-can (:cost/type %)) (merge-costs cost))
          {:fake-cost [(->c :trash-can)]})
        {:async true
-        :req (req (and (break-req state side eid card targets)
-                       (strength-req state side eid card targets)))
+        :req (req (break-req state side eid card targets)
+                       (strength-req state side eid card targets))
         :break-req break-req
         :break n
         :breaks subtypes

@@ -347,9 +347,9 @@
      state side
      {:prompt "Choose an agenda to score"
       :waiting-prompt true
-      :choices {:req (req (and (agenda? target)
+      :choices {:req (req (agenda? target)
                                (or (installed? target)
-                                   (in-hand? target))))}
+                                   (in-hand? target)))}
       :msg (msg "score " (card-str state target {:visible true}) ", ignoring all restrictions")
       :async true
       :effect (effect (score state side eid target {:no-req true :ignore-turn true}))}

@@ -116,10 +116,10 @@
               ["HQ" "R&D"]
               {:events [{:event :run-ends
                          :unregister-once-resolved true
-                         :req (req (and (:successful context)
+                         :req (req (:successful context)
                                         this-card-run
                                         (or (= [:hq] (:server context))
-                                            (= [:rd] (:server context)))))
+                                            (= [:rd] (:server context))))
                          :prompt "Choose a remote server to run"
                          :choices (effect (cancellable
                                          (->> runnable-servers
@@ -144,8 +144,8 @@
                                         (make-run state side eid run-again card {:ignore-costs true})
                                         (effect-completed state side eid)))))}
    :events [{:event :run-ends
-             :optional {:req (req (and (not (get-in card [:special :run-again]))
-                                       (:unsuccessful target)))
+             :optional {:req (req (not (get-in card [:special :run-again]))
+                                       (:unsuccessful target))
                         :prompt "Make another run on the same server?"
                         :yes-ability
                         {:effect (effect (let [last-run (get-in @state [:runner :register :last-run])
@@ -158,8 +158,8 @@
             {:event :encounter-ice
              :automatic :bypass
              :once :per-run
-             :req (req (and (get-in card [:special :run-again])
-                            (same-card? (:ice context) (get-in card [:special :run-again-ice]))))
+             :req (req (get-in card [:special :run-again])
+                            (same-card? (:ice context) (get-in card [:special :run-again-ice])))
              :msg (msg "bypass " (:title (:ice context)))
              :effect (effect (bypass-ice state))}]})
 
@@ -199,9 +199,9 @@
                                         (doseq [oc nonhostedcards
                                                 :let [c (get-card state oc)]]
                                           (flip-facedown state side c))))}]
-    {:on-play {:req (req (and (some #{:hq} (:successful-run runner-reg))
+    {:on-play {:req (req (some #{:hq} (:successful-run runner-reg))
                               (some #{:rd} (:successful-run runner-reg))
-                              (some #{:archives} (:successful-run runner-reg))))
+                              (some #{:archives} (:successful-run runner-reg)))
                :async true
                ;; trash cards from right to left
                ;; otherwise, auto-killing servers would move the cards to the next server
@@ -238,11 +238,11 @@
               :effect (effect (continue-ability
                                 state side {:prompt "Choose a card to install"
                                  :waiting-prompt true
-                                 :choices {:req (req (and (or (hardware? target)
+                                 :choices {:req (req (or (hardware? target)
                                                               (program? target)
                                                               (resource? target))
                                                           (in-hand*? state target)
-                                                          (runner-can-pay-and-install? state side (assoc eid :source card) target {:cost-bonus -1})))}
+                                                          (runner-can-pay-and-install? state side (assoc eid :source card) target {:cost-bonus -1}))}
                                  :async true
                                  :effect (effect (runner-install state side (assoc eid :source card :source-type :runner-install) target {:cost-bonus -1
                                                                                                                                :msg-keys {:install-source card
@@ -267,8 +267,8 @@
                                      (effect-completed state side eid)))))})]
     {:makes-run true
      :on-play (run-any-server-ability)
-     :interactions {:pay-credits {:req (req (and (= :runner-trash-corp-cards (:source-type eid))
-                                               (corp? target)))
+     :interactions {:pay-credits {:req (req (= :runner-trash-corp-cards (:source-type eid))
+                                               (corp? target))
                                   :type :credit}}
      :events [{:event :successful-run
                :interactive (effect true)
@@ -412,11 +412,11 @@
                      [{:event :approach-ice
                        :duration :end-of-run
                        :unregister-once-resolved true
-                       :req (req (and (not (rezzed? (:ice context)))
+                       :req (req (not (rezzed? (:ice context)))
                                       (first-run-event? state side :approach-ice
                                                         (fn [targets]
                                                           (let [context (first targets)]
-                                                            (not (rezzed? (:ice context))))))))
+                                                            (not (rezzed? (:ice context)))))))
                        :effect (effect
                                  (register-lingering-effect
                                    state side card
@@ -499,8 +499,8 @@
         state side card
         [{:event :access
           :duration :end-of-turn
-          :req (req (and (can-trash? state :runner (:accessed-card context))
-                         (not (in-discard? (:accessed-card context)))))
+          :req (req (can-trash? state :runner (:accessed-card context))
+                         (not (in-discard? (:accessed-card context))))
           :interactive (effect true)
           :async true
           :msg (msg "trash " (:title (:accessed-card context)) " at no cost and suffer 1 meat damage")
@@ -525,9 +525,9 @@
   {:on-play
    {:prompt "Choose a resource to install"
     :change-in-game-state {:req (req (seq (all-cards-in-hand* state :runner)))}
-    :choices {:req (req (and (resource? target)
+    :choices {:req (req (resource? target)
                              (in-hand*? state target)
-                             (runner-can-pay-and-install? state side eid card {:cost-bonus -3})))}
+                             (runner-can-pay-and-install? state side eid card {:cost-bonus -3}))}
     :async true
     :effect (effect (runner-install state side (assoc eid :source card :source-type :runner-install) target {:cost-bonus -3
                                                                                                   :msg-keys {:install-source card
@@ -646,9 +646,9 @@
     {:on-play {:async true
                :change-in-game-state {:req (effect (or (seq (all-installed state :corp))
                                                     (seq (all-installed state :runner))))}
-               :req (req (and (some #{:hq} (:successful-run runner-reg))
+               :req (req (some #{:hq} (:successful-run runner-reg))
                               (some #{:rd} (:successful-run runner-reg))
-                              (some #{:archives} (:successful-run runner-reg))))
+                              (some #{:archives} (:successful-run runner-reg)))
                :effect (effect (if (seq (all-installed state :corp))
                               (continue-ability state side runner-choice card nil)
                               (continue-ability state :corp corp-choice card nil)))}}))
@@ -846,9 +846,9 @@
 (defcard "Contaminate"
   {:on-play
    {:msg (msg "place 3 virus counters on " (:title target))
-    :choices {:req (req (and (installed? target)
+    :choices {:req (req (installed? target)
                              (runner? target)
-                             (zero? (get-virus-counters state target))))}
+                             (zero? (get-virus-counters state target)))}
     :change-in-game-state {:req (req (some #(zero? (get-virus-counters state %))
                                            (all-installed state :runner)))}
     :async true
@@ -913,9 +913,9 @@
   {:on-play
    {:req (req (some #{:hq :rd :archives} (:successful-run runner-reg)))
     :prompt "Choose a card to install"
-    :choices {:req (req (and (not (event? target))
+    :choices {:req (req (not (event? target))
                              (in-hand*? state target)
-                             (runner-can-pay-and-install? state side (assoc eid :source card) target {:cost-bonus -8})))}
+                             (runner-can-pay-and-install? state side (assoc eid :source card) target {:cost-bonus -8}))}
     :async true
     :cancel {:msg "take 1 tag"
              :async true
@@ -992,10 +992,10 @@
    :on-play (run-server-ability :rd)
    :events [{:event :run-ends
              :unregister-once-resolved true
-             :optional {:req (req (and (:successful target)
+             :optional {:req (req (:successful target)
                                        this-card-run
                                        (not (:run-again card))
-                                       (= [:rd] (:server target))))
+                                       (= [:rd] (:server target)))
                         :prompt "Make another run on R&D?"
                         :yes-ability (run-server-ability :rd)}}]})
 
@@ -1010,8 +1010,8 @@
   {:makes-run true
    :on-play (run-server-ability :rd)
    :events [{:event :successful-run
-             :req (req (and (= :rd (target-server context))
-                            this-card-run))
+             :req (req (= :rd (target-server context))
+                            this-card-run)
              :silent true
              :effect (effect (register-events
                               state side card [(breach-access-bonus :rd
@@ -1037,9 +1037,9 @@
                             (let [new-cards (remove #(same-card? % target) cards)]
                               (effect-completed state side (make-result eid new-cards)))))})]
     {:on-play
-     {:req (req (and (some #{:hq} (:successful-run runner-reg))
+     {:req (req (some #{:hq} (:successful-run runner-reg))
                      (some #{:rd} (:successful-run runner-reg))
-                     (some #{:archives} (:successful-run runner-reg))))
+                     (some #{:archives} (:successful-run runner-reg)))
       :async true
       :change-in-game-state {:req (req (seq (:deck corp)))}
       :effect (effect (set-aside state :corp eid (take 8 (:deck corp)))
@@ -1087,8 +1087,8 @@
 
 (defcard "Déjà Vu"
   {:on-play
-   {:change-in-game-state {:req (req (and (seq (:discard runner))
-                                          (not (zone-locked? state :runner :discard))))}
+   {:change-in-game-state {:req (req (seq (:discard runner))
+                                          (not (zone-locked? state :runner :discard)))}
     :prompt "Choose a card to add to Grip"
     :choices (effect (cancellable (:discard runner) :sorted))
     :msg (msg "add " (:title target) " to [their] Grip")
@@ -1111,8 +1111,8 @@
                   {:label "Trash card"
                    :trash? true
                    :msg (msg "trash " (:title target) " at no cost")
-                   :req (req (and (can-trash? state :runner target)
-                                  (not (in-discard? target)))) ;;for if the run gets diverted
+                   :req (req (can-trash? state :runner target)
+                                  (not (in-discard? target))) ;;for if the run gets diverted
                    :async true
                    :effect (effect (trash state side eid (assoc target :seen true) {:cause-card card}))}}})
 
@@ -1163,8 +1163,8 @@
               :yes-ability
               {:prompt "Choose a program to install"
                :async true
-               :choices {:req (req (and (in-hand*? state target)
-                                        (program? target)))}
+               :choices {:req (req (in-hand*? state target)
+                                        (program? target))}
                :effect (effect (runner-install state side eid (assoc-in target [:special :diana-installed] true) {:ignore-all-cost true
                                                                                                        :msg-keys {:install-source card
                                                                                                                   :display-origin true}}))}}}
@@ -1217,8 +1217,8 @@
   {:makes-run true
    :on-play (run-any-server-ability)
    :events [{:event :run-ends
-             :req (req (and (:successful target)
-                            this-card-run))
+             :req (req (:successful target)
+                            this-card-run)
              :msg "gain 5 [Credits]"
              :async true
              :effect (effect (gain-credits state :runner eid 5))}]})
@@ -1236,8 +1236,8 @@
    :on-play (run-server-ability :archives)
    :events [{:event :end-breach-server
              :async true
-             :req (req (and (= :archives (:from-server target))
-                            (:successful run)))
+             :req (req (= :archives (:from-server target))
+                            (:successful run))
              :effect (effect (wait-for (breach-server state side [:hq] {:no-root true})
                                     (breach-server state side eid [:rd] {:no-root true})))}]})
 
@@ -1364,9 +1364,9 @@
 
 (defcard "Encore"
   {:on-play
-   {:req (req (and (some #{:hq} (:successful-run runner-reg))
+   {:req (req (some #{:hq} (:successful-run runner-reg))
                    (some #{:rd} (:successful-run runner-reg))
-                   (some #{:archives} (:successful-run runner-reg))))
+                   (some #{:archives} (:successful-run runner-reg)))
     :rfg-instead-of-trashing true
     :msg "take an additional turn after this one"
     :effect (effect (swap! state update-in [:runner :extra-turns] (fnil inc 0)))}})
@@ -1442,9 +1442,9 @@
 
 (defcard "Exploit"
   {:on-play
-   {:req (req (and (some #{:hq} (:successful-run runner-reg))
+   {:req (req (some #{:hq} (:successful-run runner-reg))
                    (some #{:rd} (:successful-run runner-reg))
-                   (some #{:archives} (:successful-run runner-reg))))
+                   (some #{:archives} (:successful-run runner-reg)))
     :prompt "Choose up to 3 pieces of ice to derez"
     :change-in-game-state {:req (req (some (every-pred ice? rezzed?) (all-installed state :corp)))}
     :choices {:max 3
@@ -1500,8 +1500,8 @@
                    :effect (effect (trash state side eid (assoc target :seen true) {:accessed true :cause-card card}))}}
    :events [{:event :successful-run
              :silent true
-             :req (req (and (= :hq (target-server context))
-                            this-card-run))
+             :req (req (= :hq (target-server context))
+                            this-card-run)
              :async true
              :msg "take 1 tag and access 1 additional card from HQ"
              :effect (effect
@@ -1583,8 +1583,8 @@
    :on-play (run-server-ability :rd {:additional-cost [(->c :brain 1)]})
    :events [{:event :successful-run
              :silent true
-             :req (req (and (= :rd (target-server context))
-                            this-card-run))
+             :req (req (= :rd (target-server context))
+                            this-card-run)
              :effect (effect (register-events
                               state side card [(breach-access-bonus :rd 3 {:duration :end-of-run})]))}]})
 
@@ -1807,8 +1807,8 @@
              :async true
              :effect (effect (make-run state side eid target card))}
    :events [{:event :run-ends
-             :req (req (and (:successful target)
-                            this-card-run))
+             :req (req (:successful target)
+                            this-card-run)
              :msg "gain 12 [Credits]"
              :async true
              :effect (effect (gain-credits state :runner eid 12))}]})
@@ -1842,8 +1842,8 @@
              :automatic :gain-credits
              :async true
              :msg "gain 9 [Credits] and take 1 tag"
-             :req (req (and (= :hq (target-server context))
-                            this-card-run))
+             :req (req (= :hq (target-server context))
+                            this-card-run)
              :effect (effect (wait-for (gain-tags state :runner 1 {:suppress-checkpoint true})
                                     (gain-credits state :runner eid 9)))}]})
 
@@ -1862,11 +1862,11 @@
   (letfn [(install-fn [remaining]
             {:prompt (str "install a card from the Grip, paying 1 [Credits] less ("
                           remaining " remaining)")
-             :choices {:req (req (and (in-hand*? state target)
+             :choices {:req (req (in-hand*? state target)
                                       (or (hardware? target)
                                           (resource? target)
                                           (program? target))
-                                      (runner-can-pay-and-install? state side (assoc eid :source card) target {:cost-bonus -1})))}
+                                      (runner-can-pay-and-install? state side (assoc eid :source card) target {:cost-bonus -1}))}
              :async true
              :waiting-prompt true
              :effect (effect (wait-for (runner-install state side target {:cost-bonus -1
@@ -1893,11 +1893,11 @@
    :events [{:event :breach-server
              :automatic :pre-breach
              :async true
-             :req (req (and (= :archives (:server context))
+             :req (req (= :archives (:server context))
                             ;; don't prompt unless there's at least 1 rezzed piece of ice matching one in Archives
                             (not-empty (set/intersection
                                          (into #{} (map :title (filter ice? (:discard corp))))
-                                         (into #{} (map :title (filter rezzed? (all-installed state :corp))))))))
+                                         (into #{} (map :title (filter rezzed? (all-installed state :corp)))))))
              :prompt "Choose a piece of ice in Archives"
              :choices (effect (filter ice? (:discard corp)))
              :effect (effect (continue-ability
@@ -1914,8 +1914,8 @@
 (defcard "In the Groove"
   {:events [{:event :runner-install
              :duration :end-of-turn
-             :req (req (and (<= 1 (:cost (:card context)))
-                            (not (:facedown context))))
+             :req (req (<= 1 (:cost (:card context)))
+                            (not (:facedown context)))
              :interactive (effect (or (has-subtype? (:card context) "Cybernetic")
                                    (first-event? state side :runner-install)))
              :async true
@@ -2067,8 +2067,8 @@
    :on-play (run-any-server-ability)
    :events [{:event :encounter-ice
              :automatic :bypass
-             :req (req (and (first-run-event? state side :encounter-ice)
-                            this-card-is-run-source))
+             :req (req (first-run-event? state side :encounter-ice)
+                            this-card-is-run-source)
              :msg (msg "bypass " (:title (:ice context)))
              :effect (effect (bypass-ice state))}]})
 
@@ -2177,8 +2177,8 @@
              :silent true
              :async true
              :msg "draw 1 card"
-             :req (req (and (#{:hq :rd} (target-server context))
-                            this-card-run))
+             :req (req (#{:hq :rd} (target-server context))
+                            this-card-run)
              :effect (effect (register-events
                               state side card [(breach-access-bonus (target-server context) 1 {:duration :end-of-run})])
                              (draw state side eid 1))}]})
@@ -2191,8 +2191,8 @@
              :automatic :draw-cards
              :silent true
              :async true
-             :req (req (and (= :rd (target-server context))
-                            this-card-run))
+             :req (req (= :rd (target-server context))
+                            this-card-run)
              :msg "draw 5 cards"
              :effect (effect (draw state side eid 5))}]})
 
@@ -2201,8 +2201,8 @@
    :on-play (run-any-server-ability)
    :events [{:event :successful-run
              :automatic :draw-cards
-             :req (req (and this-card-run
-                            (not (zone-locked? state :runner :discard))))
+             :req (req this-card-run
+                            (not (zone-locked? state :runner :discard)))
              :prompt "Choose 1 card to add to the grip"
              :waiting-prompt true
              :choices (effect (cancellable (:discard runner) :sorted))
@@ -2284,7 +2284,7 @@
                :choices (effect (iced-servers state side eid card))
                :effect (effect (make-run state side eid target card))}
      :events [{:event :run-ends
-               :req (req (and this-card-run (:successful context)))
+               :req (req this-card-run (:successful context))
                :async true
                :interactive (effect true)
                :effect (effect (let [valid-ice (filter #(and (ice? %)
@@ -2410,8 +2410,8 @@
    :on-play (run-server-ability :hq)
    :events [{:event :successful-run
              :silent true
-             :req (req (and (= :hq (target-server context))
-                            this-card-run))
+             :req (req (= :hq (target-server context))
+                            this-card-run)
              :effect (effect (register-events
                               state side card [(breach-access-bonus :hq 2 {:duration :end-of-run})]))}]})
 
@@ -2565,9 +2565,9 @@
                                      (runner-can-pay-and-install? state side (assoc eid :source card :source-type :runner-install) %))
                                (all-cards-in-hand* state :runner)))
                :prompt "Choose a program to install"
-               :choices {:req (req (and (program? target)
+               :choices {:req (req (program? target)
                                         (in-hand*? state target)
-                                        (runner-can-pay-and-install? state side (assoc eid :source card :source-type :runner-install) target)))}
+                                        (runner-can-pay-and-install? state side (assoc eid :source card :source-type :runner-install) target))}
                :effect (effect (wait-for (runner-install state side target {:msg-keys {:install-source card
                                                                                     :display-origin true}})
                                       (continue-ability state side (mhelper (inc n)) card nil)))}))]
@@ -2651,16 +2651,16 @@
                                (effect-completed state side eid)))))}
    :events [{:event :successful-run
              :automatic :gain-credits
-             :req (req (and (get-in card [:special :run-again])
-                            (= :rd (target-server context))))
+             :req (req (get-in card [:special :run-again])
+                            (= :rd (target-server context)))
              :msg "gain 4 [Credits]"
              :async true
              :effect (effect (gain-credits state side eid 4))}
             {:event :run-ends
              :interactive (effect true)
-             :optional {:req (req (and (:successful target)
+             :optional {:req (req (:successful target)
                                        (not (get-in card [:special :run-again]))
-                                       (= [:rd] (:server target))))
+                                       (= [:rd] (:server target)))
                         :prompt "Make another run on R&D?"
                         :yes-ability {:effect (effect (clear-wait-prompt state :corp)
                                                       (update! state side (assoc-in card [:special :run-again] true)))}}}]})
@@ -2669,10 +2669,10 @@
   {:on-play
    {:prompt "Choose a program or piece of hardware to install"
     :change-in-game-state {:req (req (seq (all-cards-in-hand* state :runner)))}
-    :choices {:req (req (and (or (hardware? target)
+    :choices {:req (req (or (hardware? target)
                                  (program? target))
                              (in-hand*? state target)
-                             (runner-can-pay-and-install? state side eid card {:cost-bonus -3})))}
+                             (runner-can-pay-and-install? state side eid card {:cost-bonus -3}))}
     :async true
     :effect (effect (runner-install state side (assoc eid :source card :source-type :runner-install) target {:cost-bonus -3
                                                                                                   :msg-keys {:install-source card
@@ -2738,9 +2738,9 @@
 
 (defcard "Notoriety"
   {:on-play
-   {:req (req (and (some #{:hq} (:successful-run runner-reg))
+   {:req (req (some #{:hq} (:successful-run runner-reg))
                    (some #{:rd} (:successful-run runner-reg))
-                   (some #{:archives} (:successful-run runner-reg))))
+                   (some #{:archives} (:successful-run runner-reg)))
     :msg (msg "add itself to [their] score area as an agenda worth 1 agenda point")
     :effect (effect (as-agenda state :runner card 1))}})
 
@@ -2844,10 +2844,10 @@
                :this-card-run true
                :ability
                {:prompt "Choose a card in the root of another server to access"
-                :choices {:req (req (and (not= (first (:server (:run @state)))
+                :choices {:req (req (not= (first (:server (:run @state)))
                                                (second (get-zone (get-nested-host target))))
                                          (= (last (get-zone (get-nested-host target)))
-                                            :content)))}
+                                            :content))}
                 :async true
                 :waiting-prompt true
                 :effect (effect (if (agenda? target)
@@ -2929,8 +2929,8 @@
 
 (defcard "Power to the People"
   {:events [{:event :access
-             :req (req (and (agenda? (:accessed-card context))
-                            (first-event? state side :access #(agenda? (:accessed-card (first %))))))
+             :req (req (agenda? (:accessed-card context))
+                            (first-event? state side :access #(agenda? (:accessed-card (first %)))))
              :duration :end-of-turn
              :unregister-once-resolved true
              :msg "gain 7 [Credits]"
@@ -2941,9 +2941,9 @@
   {:makes-run true
    :on-play (run-any-server-ability)
    :events [{:event :pass-ice
-             :req (req (and (rezzed? (:ice context))
+             :req (req (rezzed? (:ice context))
                             (not-used-once? state {:once :per-run} card)
-                            (<= (get-strength (:ice context)) (count (all-installed state :runner)))))
+                            (<= (get-strength (:ice context)) (count (all-installed state :runner))))
              :async true
              :effect
              (effect
@@ -2973,11 +2973,10 @@
           {:prompt "Choose a program to install"
            :waiting-prompt true
            :async true
-           :req (req (and
-                       (not (get-in card [:special :maybe-a-bonus-tag]))
+           :req (req (not (get-in card [:special :maybe-a-bonus-tag]))
                        (not (zone-locked? state :runner :discard))
                        (not (install-locked? state side))
-                       (threat-level 3 state)))
+                       (threat-level 3 state))
            :interactive (effect true)
            :ability-name "Privileged Access (program)"
            :choices (effect (concat
@@ -2999,10 +2998,9 @@
         install-resource-from-heap
           {:prompt "Choose a resource to install, paying 2 [Credits] less"
            :waiting-prompt true
-           :req (req (and
-                       (not (get-in card [:special :maybe-a-bonus-tag]))
+           :req (req (not (get-in card [:special :maybe-a-bonus-tag]))
                        (not (zone-locked? state :runner :discard))
-                          (not (install-locked? state side))))
+                          (not (install-locked? state side)))
            :async true
            :interactive (effect true)
            :ability-name "Privileged Access (resource)"
@@ -3124,9 +3122,9 @@
 
 (defcard "Quest Completed"
   {:on-play
-   {:req (req (and (some #{:hq} (:successful-run runner-reg))
+   {:req (req (some #{:hq} (:successful-run runner-reg))
                    (some #{:rd} (:successful-run runner-reg))
-                   (some #{:archives} (:successful-run runner-reg))))
+                   (some #{:archives} (:successful-run runner-reg)))
     :change-in-game-state {:req (req (some (complement ice?) (all-installed state :corp)))}
     :choices {:card installed?}
     :msg (msg "access " (:title target))
@@ -3239,9 +3237,9 @@
                    {:async true
                     :prompt "Choose a program or piece of hardware to install"
                     :choices
-                    {:req (req (and (valid-target? target)
+                    {:req (req (valid-target? target)
                                     (in-hand*? state target)
-                                    (runner-can-pay-and-install? state side (assoc eid :source card) target {:cost-bonus (- bonus)})))}
+                                    (runner-can-pay-and-install? state side (assoc eid :source card) target {:cost-bonus (- bonus)}))}
                     :effect (effect (runner-install state side (assoc eid :source card :source-type :runner-install)
                                                     target {:cost-bonus (- bonus)
                                                             :msg-keys {:install-source card
@@ -3292,8 +3290,8 @@
               {:target-server :archives
                :this-card-run true
                :ability {:async true
-                         :req (req (and (not (zone-locked? state :runner :discard))
-                                        (seq (filter #(and (program? %) (runner-can-install? state side eid % {:no-toast true})) (:discard runner)))))
+                         :req (req (not (zone-locked? state :runner :discard))
+                                        (seq (filter #(and (program? %) (runner-can-install? state side eid % {:no-toast true})) (:discard runner))))
                          :prompt "Choose a program to install"
                          :waiting-prompt true
                          :choices (effect (filter #(and (program? %) (runner-can-install? state side eid % {:no-toast true})) (:discard runner)))
@@ -3350,10 +3348,10 @@
 (defcard "Rigging Up"
   {:on-play
    {:prompt "Choose a program or piece of hardware to install"
-    :choices {:req (req (and (or (hardware? target)
+    :choices {:req (req (or (hardware? target)
                                  (program? target))
                              (in-hand*? state target)
-                             (runner-can-pay-and-install? state side (assoc eid :source card) target {:cost-bonus -3})))}
+                             (runner-can-pay-and-install? state side (assoc eid :source card) target {:cost-bonus -3}))}
     :change-in-game-state {:req (req (seq (all-cards-in-hand* state :runner)))}
     :async true
     :effect (effect (wait-for (runner-install state side (make-eid state {:source card :source-type :runner-install}) target {:cost-bonus -3
@@ -3376,10 +3374,10 @@
         {:optional
          {:prompt "Add cards from heap to grip?"
           :waiting-prompt true
-          :req (req (and run
+          :req (req run
                          (pos? (count (:hand corp)))
                          (pos? (count (:discard runner)))
-                         (not (zone-locked? state :runner :discard))))
+                         (not (zone-locked? state :runner :discard)))
           :yes-ability
           {:async true
            :effect (effect (let [random-access-limit (:random-access-limit (num-cards-to-access state side :hq nil))
@@ -3408,8 +3406,8 @@
      :events [{:event :successful-run
                :automatic :draw-cards
                :silent true
-               :req (req (and (= :hq (target-server context))
-                              this-card-run))
+               :req (req (= :hq (target-server context))
+                              this-card-run)
                :effect (effect (register-events state side card
                                 [{:event :candidates-determined
                                   :duration :end-of-run
@@ -3473,7 +3471,7 @@
 (defcard "Running Interference"
   {:makes-run true
    :static-abilities [{:type :rez-additional-cost
-                       :req (req (and run (ice? target)))
+                       :req (req run (ice? target))
                        :value (effect [(->c :credit (:cost target))])}]
    :on-play (run-any-server-ability)})
 
@@ -3488,8 +3486,8 @@
              :effect (effect (bypass-ice state))}
             {:event :encounter-ice
              :skippable true
-             :req (req (and (= 2 (count (run-events state side :encounter-ice)))
-                            (threat-level 4 state)))
+             :req (req (= 2 (count (run-events state side :encounter-ice)))
+                            (threat-level 4 state))
              :async true
              :effect (effect (continue-ability
                                state side {:optional {:prompt (msg "Spend [Click] to bypass " 
@@ -3535,11 +3533,11 @@
                                   "Choose a program to install")
                         :show-discard  (not (zone-locked? state :runner :discard))
                         :choices
-                        {:req (req (and (program? target)
+                        {:req (req (program? target)
                                         (or (in-hand*? state target)
                                             (and (in-discard? target)
                                                  (not (zone-locked? state :runner :discard))))
-                                        (runner-can-pay-and-install? state side (assoc eid :source card) target {:cost-bonus (- tcost)})))}
+                                        (runner-can-pay-and-install? state side (assoc eid :source card) target {:cost-bonus (- tcost)}))}
                         :msg (msg "trash " (:title trashed)
                                   " and install " (:title target)
                                   ", lowering the cost by " tcost " [Credits]")
@@ -3550,8 +3548,8 @@
 (defcard "Scrounge"
   (let [bottom-one-program {:prompt "Put a program on the bottom of the stack?"
                             :req (req (seq (filter program? (:discard runner))))
-                            :choices {:req (req (and (program? target)
-                                                     (in-discard? target)))}
+                            :choices {:req (req (program? target)
+                                                     (in-discard? target))}
                             :show-discard true
                             :msg (msg "put " (:title target) " on the bottom of the stack")
                             :effect (effect (move state side target :deck))}]
@@ -3559,9 +3557,9 @@
                :label "Install program from the heap"
                :show-discard true
                :change-in-game-state {:req (req (some program? (:discard runner)))}
-               :choices {:req (req (and (program? target)
+               :choices {:req (req (program? target)
                                         (in-discard? target)
-                                        (runner-can-pay-and-install? state side (assoc eid :source card) target)))}
+                                        (runner-can-pay-and-install? state side (assoc eid :source card) target))}
                :async true
                :effect (effect (wait-for
                               (runner-install state side target {:msg-keys {:install-source card
@@ -3585,9 +3583,9 @@
 
 (defcard "Security Leak"
   {:static-abilities [{:type :card-ability-additional-cost
-                       :req (req (and (same-card? (:card context) (:basic-action-card corp))
+                       :req (req (same-card? (:card context) (:basic-action-card corp))
                                       (= "Advance 1 installed card"
-                                         (:label (:ability context)))))
+                                         (:label (:ability context))))
                       :value (->c :credit 1)}]})
 
 (defcard "Sell Out"
@@ -3601,7 +3599,7 @@
   {:on-play (run-any-server-ability)
    :makes-run true
    :static-abilities [{:type :prevention
-                       :req (req (and run (first-run-event? state side :end-run-interrupt)))
+                       :req (req run (first-run-event? state side :end-run-interrupt))
                        :value {:prevents :end-run
                                :type :floating
                                :max-uses 1
@@ -3627,8 +3625,8 @@
   {:makes-run true
    :on-play (run-server-ability :rd)
    :events [{:event :successful-run
-             :req (req (and (= :rd (target-server context))
-                            this-card-run))
+             :req (req (= :rd (target-server context))
+                            this-card-run)
              :silent true
              :msg "access cards from the bottom of R&D"
              :effect (effect (swap! state assoc-in [:runner :rd-access-fn] reverse))}
@@ -3906,15 +3904,15 @@
               {:play-cost-bonus (effect (- (count (get-in @state [:corp :servers :hq :ices]))))})
    :events [{:event :successful-run
              :silent (effect true)
-             :req (req (and (= :hq (target-server context)) this-card-run))
+             :req (req (= :hq (target-server context)) this-card-run)
              :effect (effect (register-events
                                state side card [(breach-access-bonus :hq 2 {:duration :end-of-run})]))}]})
 
 (defcard "Take a Dive"
   {:on-play (run-server-from-choices-ability ["HQ" "R&D"] {:rfg-instead-of-trashing true})
    :events [{:event :successful-run
-             :req (req (and (#{:hq :rd} (target-server context))
-                            (pos? (or (:subroutines-fired context) 0))))
+             :req (req (#{:hq :rd} (target-server context))
+                            (pos? (or (:subroutines-fired context) 0)))
              :msg "force the Corp to take 1 Bad Publicity"
              :async true
              :effect (effect (gain-bad-publicity state :corp eid 1 {:card card}))}]})
@@ -3963,8 +3961,8 @@
    :on-play (run-server-ability :rd)
    :events [{:event :successful-run
              :silent true
-             :req (req (and (= :rd (target-server context))
-                            this-card-run))
+             :req (req (= :rd (target-server context))
+                            this-card-run)
              :effect (effect (register-events
                               state side card [(breach-access-bonus :rd 2 {:duration :end-of-run})]))}]})
 
@@ -3985,10 +3983,9 @@
                  :mandatory true
                  :ability {:async true
                            :req (req
-                                  (and
-                                    run
+                                  run
                                     (same-card? card (get-in @state [:runner :play-area 0]))
-                                    (preventable? context)))
+                                    (preventable? context))
                            :condition :active
                            :msg (msg "prevent " (:remaining context) " " (damage-name state) " damage")
                            :effect (effect (prevent-damage state side eid :all))}}]
@@ -4108,8 +4105,8 @@
    :events [{:event :successful-run
              :interactive (effect true)
              :automatic :drain-credits
-             :req (req (and this-card-run
-                            (= :hq (target-server context))))
+             :req (req this-card-run
+                            (= :hq (target-server context)))
              :msg "take 1 tag"
              :async true
              :effect (effect (wait-for (gain-tags state :runner 1)
@@ -4122,7 +4119,7 @@
   {:on-play (run-any-server-ability)
    :makes-run true
    :static-abilities [{:type :rez-cost
-                       :req (req (and run (ice? target)))
+                       :req (req run (ice? target))
                        :value 3}]})
 
 (defcard "Trick Shot"
@@ -4139,9 +4136,9 @@
              :automatic :gain-credits
              :unregister-once-resolved true
              :silent true
-             :req (req (and (= :rd (target-server context))
+             :req (req (= :rd (target-server context))
                             this-card-run
-                            (= (get-in card [:special :run-eid :eid]) (get-in @state [:run :eid :eid]))))
+                            (= (get-in card [:special :run-eid :eid]) (get-in @state [:run :eid :eid])))
              :msg "place 2 [Credits] on itself and access 1 additional card from R&D"
              :async true
              :effect (effect
@@ -4237,8 +4234,8 @@
     {:makes-run true
      :on-play run-remote-server-ability
      :events [{:event :pre-access-card
-               :req (req (and (not (agenda? (:accessed-card context)))
-                              (:successful run)))
+               :req (req (not (agenda? (:accessed-card context)))
+                              (:successful run))
                :once :per-run
                :msg (msg "remove " (:title (:accessed-card context)) " from the game, and watch for other copies of " (:title (:accessed-card context)) " to burn")
                :effect (effect (move state :corp (:accessed-card context) :rfg)
@@ -4252,8 +4249,8 @@
      :unsuccessful (with-revealed-hand :corp {:event-side :corp :forced true}
                      {:prompt "Shuffle up to 2 cards into R&D"
                       :player :runner
-                      :choices {:req (req (and (corp? target)
-                                               (in-hand? target)))
+                      :choices {:req (req (corp? target)
+                                               (in-hand? target))
                                 :max (effect (min 2 (count (:hand corp))))}
                       :msg (msg "shuffle " (enumerate-cards targets :sorted) " into R&D")
                       :effect (effect (doseq [t targets]
@@ -4294,10 +4291,10 @@
         {:prompt "Choose 1 program or piece of hardware to install"
          :waiting-prompt true
          :change-in-game-state {:silent true :req (req (seq (all-cards-in-hand* state :runner)))}
-         :choices {:req (req (and (in-hand*? state target)
+         :choices {:req (req (in-hand*? state target)
                                   (or (hardware? target)
                                       (program? target))
-                                  (runner-can-pay-and-install? state side (assoc eid :source card) target)))}
+                                  (runner-can-pay-and-install? state side (assoc eid :source card) target))}
          :async true
          :effect (effect (runner-install state side (assoc eid :source card :source-type :runner-install) target {:msg-keys {:install-source card
                                                                                                                   :display-origin true}}))}]
@@ -4326,8 +4323,8 @@
                                       :optional
                                       {:player :corp
                                        :waiting-prompt true
-                                       :req (req (and (installed? (get-card state chosen-ice))
-                                                      (not (rezzed? (get-card state chosen-ice)))))
+                                       :req (req (installed? (get-card state chosen-ice))
+                                                      (not (rezzed? (get-card state chosen-ice))))
                                        :prompt (str "Rez " (card-str state chosen-ice) ", ignoring all costs?")
                                        :yes-ability {:async true
                                                      :effect

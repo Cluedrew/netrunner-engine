@@ -247,10 +247,10 @@
      :type :ability
      :label label
      :ability {:req (req
-                      (and (seq (relevant state card))
+                      (seq (relevant state card))
                            (not (:unpreventable context))
                            (valid-context? context)
-                           (can-pay? state side eid card nil cost)))
+                           (can-pay? state side eid card nil cost))
                :async true
                :fake-cost cost
                :effect (effect
@@ -369,9 +369,9 @@
   (letfn [(remainder [state] (get-in @state [:prevent (damage-key state) :remaining]))
           (max-to-avoid [state n] (if (= n :all) (remainder state) (min (remainder state) n)))]
     {:prompt (msg "Choose how much " (damage-name state) " damage prevent")
-     :req (req (and (preventable? state (damage-key state))
+     :req (req (preventable? state (damage-key state))
                     (or (not types)
-                        (contains? types (get-in @state [:prevent (damage-key state) :type])))))
+                        (contains? types (get-in @state [:prevent (damage-key state) :type]))))
      :choices {:number (effect (max-to-avoid state n))
                :default (effect (max-to-avoid state n))}
      :async true

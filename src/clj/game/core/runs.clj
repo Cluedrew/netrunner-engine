@@ -593,14 +593,14 @@
         duration (:duration props)]
     {:event :successful-run
      :duration duration
-     :req (req (and (if use-this-card-run this-card-run true)
+     :req (req (if use-this-card-run this-card-run true)
                     (case attacked-server
                       (:archives :rd :hq)
                       (= attacked-server (target-server context))
                       :remote
                       (is-remote? (target-server context))
                       ; else
-                      true)))
+                      true))
      :silent true
      :effect (effect (add-run-effect state card ability props))}))
 

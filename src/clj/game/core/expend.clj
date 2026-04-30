@@ -18,12 +18,11 @@
                       (merge-costs (conj (:cost ex) exp-cost))
                       exp-cost)]
     {:req (req
-            (and
-              (can-pay?
+            (can-pay?
                 state side (assoc eid :source card :source-type :ability) card nil merged-cost)
               (if (some? (:req ex))
                 ((:req ex) state side eid card targets)
-                true)))
+                true))
      :async true
      :action true
      :effect (effect
