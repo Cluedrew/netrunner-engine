@@ -8,7 +8,7 @@
    [game.core.moving :refer [move move-zone]]
    [game.core.say :refer [system-msg play-sfx]]
    [game.core.servers :refer [name-zone]]
-   [game.macros :refer [continue-ability msg req]]
+   [game.macros :refer [continue-ability msg effect]]
    [game.utils :refer [enumerate-str enumerate-cards quantify]])
   (:import [java.security SecureRandom]))
 
@@ -88,12 +88,12 @@
 
 (def shuffle-my-deck!
   {:msg (msg "shuffle " (if (= side :runner) "the stack" "R&D"))
-   :effect (req (shuffle! state side :deck))})
+   :effect (effect (shuffle! state side :deck))})
 
 (def fail-to-find!
   "Fail to find a card when searching the stack (runner), triggers the stack searched event if runner"
   {:msg (msg "shuffle " (if (= side :runner) "the stack" "R&D"))
-   :effect (req (when (= side :runner)
+   :effect (effect (when (= side :runner)
                   (trigger-event state side :searched-stack))
                 (shuffle! state side :deck))})
 
@@ -126,7 +126,7 @@
                                      " (" (enumerate-cards unseen :sorted) ")"))))
                        " into R&D")}
       :waiting-prompt true
-      :effect (req (doseq [c targets]
+      :effect (effect (doseq [c targets]
                      (move state side c :deck))
                    (shuffle! state side :deck))
       :cancel shuffle-my-deck!}

@@ -9,7 +9,7 @@
     [game.core.memory :refer [available-mu update-mu]]
     [game.core.say :refer [system-msg]]
     [game.core.tags :refer [update-tag-status]]
-    [game.macros :refer [req]]))
+    [game.macros :refer [effect]]))
 
 (defn- change-msg
   "Send a system message indicating the property change"
@@ -67,7 +67,7 @@
     (let [user-side side]
       {:type :user-agenda-points
        ;; `target` is either `:corp` or `:runner`
-       :req (req (= user-side target))
+       :req (effect (= user-side target))
        :value delta}))
   (update-all-agenda-points state side)
   (system-msg state side
@@ -93,7 +93,7 @@
     state side nil
     (let [user-side side]
       {:type :user-hand-size
-       :req (req (= side user-side))
+       :req (effect (= side user-side))
        :value delta}))
   (update-hand-size state side)
   (system-msg state side

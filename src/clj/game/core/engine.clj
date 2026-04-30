@@ -17,7 +17,7 @@
     [game.core.say :refer [system-msg multi-msg system-say n-last-logs]]
     [game.core.update :refer [update!]]
     [game.core.winning :refer [check-win-by-agenda]]
-    [game.macros :refer [continue-ability req wait-for]]
+    [game.macros :refer [continue-ability effect wait-for]]
     [game.utils :refer [dissoc-in distinct-by enumerate-str in-coll? remove-once same-card? server-cards side-str to-keyword]]
     [jinteki.utils :refer [other-side]]
     [game.core.memory :refer [update-mu]]
@@ -829,7 +829,7 @@
                                              (rest handlers))]
                     (if-let [the-card (card-for-ability state to-resolve)]
                       {:async true
-                       :effect (req
+                       :effect (effect
                                  (when (:unregister-once-resolved to-resolve)
                                    (unregister-event-by-uuid state side (:uuid to-resolve)))
                                  (let [new-eid (make-eid state (assoc eid :source the-card :source-type :ability))]
@@ -843,13 +843,13 @@
                                                                  nil event-targets)
                                                (effect-completed state side eid)))))}
                       {:async true
-                       :effect (req (if (should-continue state handlers)
+                       :effect (effect (if (should-continue state handlers)
                                       (continue-ability state side (choose-handler (rest handlers) done?) nil event-targets)
                                       (effect-completed state side eid)))}))
                   {:prompt "Choose a trigger to resolve"
                    :choices titles
                    :async true
-                   :effect (req
+                   :effect (effect
                              (if (= target "Done")
                                (do
                                  (doseq [{:keys [handler]} (filter handler-skippable? handlers)]
@@ -1050,7 +1050,7 @@
             {:async true
              :prompt "Choose a trigger to resolve"
              :choices choices-titles
-             :effect (req (if (= target "Done")
+             :effect (effect (if (= target "Done")
                             (do (doseq [{:keys [handler]} (filter handler-skippable? handlers)]
                                   (when (:unregister-once-resolved handler)
                                     (unregister-event-by-uuid state side (:uuid handler)))
@@ -1243,7 +1243,7 @@
                      :card #(and (installed? %)
                                  (program? %))}
            :async true
-           :effect (req (wait-for (move* state side (make-eid state eid) :trash-cards targets {:game-trash true
+           :effect (effect (wait-for (move* state side (make-eid state eid) :trash-cards targets {:game-trash true
                                                                                                :unpreventable true})
                                   (update-mu state)
                                   (effect-completed state side eid)))})

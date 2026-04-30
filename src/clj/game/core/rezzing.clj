@@ -17,7 +17,7 @@
     [game.core.toasts :refer [toast]]
     [game.core.to-string :refer [card-str]]
     [game.core.update :refer [update!]]
-    [game.macros :refer [continue-ability req wait-for]]
+    [game.macros :refer [continue-ability effect wait-for]]
     [game.utils :refer [enumerate-str to-keyword]]))
 
 (defn get-rez-cost
@@ -157,10 +157,10 @@
            {:optional
             {:prompt "Pay the alternative Rez cost?"
              :yes-ability {:async true
-                           :effect (req (rez state side eid card (merge args {:ignore-cost true
+                           :effect (effect (rez state side eid card (merge args {:ignore-cost true
                                                                       :alternative-cost alternative-cost})))}
              :no-ability {:async true
-                          :effect (req (rez state side eid card (merge args {:declined-alternative-cost true})))}}}
+                          :effect (effect (rez state side eid card (merge args {:declined-alternative-cost true})))}}}
            card nil)
          (complete-rez state side eid card args))
        (effect-completed state side eid)))))

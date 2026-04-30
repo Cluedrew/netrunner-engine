@@ -28,7 +28,7 @@
     [game.core.to-string :refer [card-str]]
     [game.core.toasts :refer [toast]]
     [game.core.update :refer [update!]]
-    [game.macros :refer [continue-ability req wait-for]]
+    [game.macros :refer [continue-ability effect wait-for]]
     [game.utils :refer [dissoc-in quantify remove-once same-card? same-side? server-cards to-keyword]]
     [taoensso.timbre :as timbre]))
 
@@ -143,7 +143,7 @@
         {:card card
          :ability {:action true
                    :async true
-                   :effect (req (play-instant state side eid (assoc card :rfg-instead-of-trashing true) {:base-cost flashback-cost :as-flashback true}))}
+                   :effect (effect (play-instant state side eid (assoc card :rfg-instead-of-trashing true) {:base-cost flashback-cost :as-flashback true}))}
          :ability-idx 0
          :targets []}))))
 
@@ -405,7 +405,7 @@
 (defn- play-heap-breaker-auto-pump-and-break-impl
   [state side sub-groups-to-break current-ice]
   {:async true
-   :effect (req
+   :effect (effect
              (let [subs-to-break (first sub-groups-to-break)
                    sub-groups-to-break (rest sub-groups-to-break)]
                (doseq [sub subs-to-break]
@@ -429,7 +429,7 @@
         can-pump (fn [ability]
                    (when (and (:heap-breaker-pump ability)
                               (not (any-effects state side :prevent-paid-ability true? card [ability])))
-                     ((:req ability (req true)) state side eid card nil)))
+                     ((:req ability (effect true)) state side eid card nil)))
         breaker-ability (some #(when (can-pump %) %) (:abilities (card-def card)))
         pump-strength-at-once (when breaker-ability
                                 (:heap-breaker-pump breaker-ability))
@@ -484,7 +484,7 @@
 (defn- play-auto-pump-and-break-impl
   [state side payment-eid sub-groups-to-break current-ice break-ability]
   {:async true
-   :effect (req
+   :effect (effect
              (let [subs-to-break (first sub-groups-to-break)
                    sub-groups-to-break (rest sub-groups-to-break)]
                (doseq [sub subs-to-break]

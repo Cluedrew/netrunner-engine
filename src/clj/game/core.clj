@@ -829,7 +829,7 @@
   [game.macros
    continue-ability
    msg
-   req
+   effect
    wait-for
    when-let*])
 

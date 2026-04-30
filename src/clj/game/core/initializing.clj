@@ -14,7 +14,7 @@
     [game.core.payment :refer [add-cost-label-to-ability]]
     [game.core.props :refer [add-counter]]
     [game.core.update :refer [update!]]
-    [game.macros :refer [req]]
+    [game.macros :refer [effect]]
     [game.utils :refer [make-cid make-timestamp server-card to-keyword]]
     [jinteki.utils :refer [make-label]]))
 
@@ -120,8 +120,8 @@
          c (get-card state c)]
      ;; TODO - handle recurring credits as part of the start of turn phase (as in the CR), rather than applying events to each card
      (when recurring
-       (let [recurring-fn (req (if (number? recurring) recurring (recurring state side eid card targets)))
-             r (req (let [card (update! state side (assoc-in card [:counter :recurring] 0))
+       (let [recurring-fn (effect (if (number? recurring) recurring (recurring state side eid card targets)))
+             r (effect (let [card (update! state side (assoc-in card [:counter :recurring] 0))
                           n (recurring-fn state side eid card targets)]
                       (add-counter state side eid card
                                    :recurring n
@@ -129,7 +129,7 @@
          (register-events
            state side c
            [{:event (if (= side :corp) :corp-phase-12 :runner-phase-12)
-             :req (req (not (:disabled card)))
+             :req (effect (not (:disabled card)))
              :async true
              :effect r}])))
      (register-default-events state side c)

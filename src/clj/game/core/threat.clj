@@ -6,7 +6,7 @@
     [game.core.engine :refer [resolve-ability]]
     [game.core.moving :refer [trash-cards]]
     [game.core.say :refer [system-msg]]
-    [game.macros :refer [req msg continue-ability]]
+    [game.macros :refer [effect msg continue-ability]]
     [game.utils :refer [pluralize]]))
 
 (defn threat-level [threshold state]
@@ -22,9 +22,9 @@
   ([threshold accept-ab]
    (threat threshold accept-ab nil))
   ([threshold accept-ab reject-ab]
-   {:req (req true)
+   {:req (effect true)
     :async true
-    :effect (req (if (threat-level threshold state)
+    :effect (effect (if (threat-level threshold state)
                    (continue-ability state side accept-ab card targets)
                    (if (nil? reject-ab)
                      (effect-completed state side eid)

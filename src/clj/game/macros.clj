@@ -70,7 +70,7 @@
                 :when (contains? forms x)]
             (get forms x))))
 
-(defmacro req [& expr]
+(defmacro effect [& expr]
   (let [needed-locals (find-undefined-locals expr)
         nls (emit-only needed-locals)]
     `(fn ~['state 'side 'eid 'card 'targets]
@@ -80,7 +80,7 @@
          ~@expr))))
 
 (defmacro msg [& expr]
-  `(req (str ~@expr)))
+  `(effect (str ~@expr)))
 
 (defmacro wait-for
   [& body]

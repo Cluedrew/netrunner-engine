@@ -4,7 +4,7 @@
    [game.core.effects :refer [is-disabled-reg?]]
    [game.core.engine :refer [checkpoint queue-event resolve-ability]]
    [game.core.payment :refer [can-pay? merge-costs ->c]]
-   [game.macros :refer [req wait-for]]))
+   [game.macros :refer [effect wait-for]]))
 
 (defn expendable?
   "Can a card be expended? (disabled cards will not retain the ability)"
@@ -17,7 +17,7 @@
         merged-cost (if (some? (:cost ex))
                       (merge-costs (conj (:cost ex) exp-cost))
                       exp-cost)]
-    {:req (req
+    {:req (effect
             (and
               (can-pay?
                 state side (assoc eid :source card :source-type :ability) card nil merged-cost)
@@ -26,7 +26,7 @@
                 true)))
      :async true
      :action true
-     :effect (req
+     :effect (effect
                (wait-for
                  (resolve-ability state :corp (assoc ex :cost merged-cost) card nil)
                  (queue-event state :expend-resolved {:card card})
