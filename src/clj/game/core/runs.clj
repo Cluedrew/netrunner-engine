@@ -20,7 +20,7 @@
     [game.core.subtypes :refer [update-all-subtypes]]
     [game.core.to-string :refer [card-str]]
     [game.core.update :refer [update!]]
-    [game.macros :refer [continue-ability effect req wait-for]]
+    [game.macros :refer [continue-ability req wait-for]]
     [game.utils :refer [dissoc-in same-card?]]
     [jinteki.utils :refer [count-bad-pub other-side]]
     [clojure.stacktrace :refer [print-stack-trace]]
@@ -670,8 +670,8 @@
             {:prompt (str "You are prevented from breaching " (zone->name server) " this run.")
              :choices ["OK"]
              :async true
-             :effect (effect (system-msg :runner (str "is prevented from breaching " (zone->name server) " this run."))
-                             (handle-end-run eid))}
+             :effect (req (system-msg state :runner (str "is prevented from breaching " (zone->name server) " this run."))
+                             (handle-end-run state side eid))}
             nil nil)
 
           ;; Any number of replace-breach effects

@@ -7,7 +7,7 @@
     [game.core.prompts :refer [show-prompt]]
     [game.core.toasts :refer [toast]]
     [game.core.update :refer [update!]]
-    [game.macros :refer [effect req wait-for]]
+    [game.macros :refer [req wait-for]]
     [clojure.string :as string]))
 
 (defn optional-ability
@@ -75,8 +75,8 @@
    :label (str "Toggle auto-resolve on " ability-name)
    :prompt (str "Set auto-resolve on " ability-name " to:")
    :choices ["Always" "Never" "Ask"]
-   :effect (effect (update! (assoc-in card [:special toggle-kw] (keyword (string/lower-case target))))
-                   (toast (str "From now on, " ability-name " will "
+   :effect (req (update! state side (assoc-in card [:special toggle-kw] (keyword (string/lower-case target))))
+                   (toast state side (str "From now on, " ability-name " will "
                                ({:always "always" :never "never" :ask "ask whether it should"}
                                 (get-in (get-card state card) [:special toggle-kw]))
                                " resolve.") "info"))})

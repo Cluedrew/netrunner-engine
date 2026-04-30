@@ -10,7 +10,7 @@
     [game.core.payment :refer [build-cost-label can-pay? merge-costs ->c stealth-value]]
     [game.core.say :refer [system-msg]]
     [game.core.update :refer [update!]]
-    [game.macros :refer [req effect msg continue-ability wait-for]]
+    [game.macros :refer [req msg continue-ability wait-for]]
     [game.utils :refer [same-card? pluralize quantify remove-once]]
     [jinteki.utils :refer [make-label]]
     [clojure.string :as string]
@@ -683,8 +683,8 @@
                                (str " " (string/join " or " (sort subtypes))))
                              (pluralize " subroutine" n)
                              (add-stealth-to-label cost))))
-        :effect (effect (continue-ability
-                          (let [n (if (fn? n)
+        :effect (req (continue-ability
+                          state side (let [n (if (fn? n)
                                     (n state side eid card nil)
                                     n)]
                             (when (can-pay? state side eid
@@ -728,7 +728,7 @@
                             card)
                           (get-strength card))
                 duration-string)
-      :effect (effect (pump card
+      :effect (req (pump state side card
                             (get-pump-strength
                               state side
                               (assoc args :pump strength)

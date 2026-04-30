@@ -27,7 +27,7 @@
     [game.core.to-string :refer [card-str]]
     [game.core.toasts :refer [toast]]
     [game.core.update :refer [update!]]
-    [game.macros :refer [continue-ability effect req wait-for]]
+    [game.macros :refer [continue-ability req wait-for]]
     [game.utils :refer [dissoc-in enumerate-str in-coll? same-card? to-keyword quantify]]
     [medley.core :refer [find-first]]))
 
@@ -427,7 +427,7 @@
                          {:prompt (str "Choose a location to install " (:title card))
                           :choices (installable-servers state card)
                           :async true
-                          :effect (effect (corp-install eid card target args))}
+                          :effect (req (corp-install state side eid card target args))}
                          card nil)
        ;; A card was selected as the server; recurse, with the :host-card parameter set.
        (and (map? server)
@@ -786,7 +786,7 @@
          {:choices hosting
           :prompt (str "Choose a card to host " (:title card) " on")
           :async true
-          :effect (effect (runner-install-pay eid card (assoc args :host-card target)))}
+          :effect (req (runner-install-pay state side eid card (assoc args :host-card target)))}
          card nil)
        (if-let [potential-hosts (runner-can-host state side eid card args)]
          (runner-host-choice state side eid card potential-hosts args)
