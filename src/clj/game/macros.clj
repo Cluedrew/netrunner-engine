@@ -79,8 +79,11 @@
        (let [~@nls]
          ~@expr))))
 
-(defmacro msg [& expr]
-  `(effect (str ~@expr)))
+(defmacro msg [& exprs]
+  `(effect (str ~@exprs)))
+
+(defmacro req [& exprs]
+  `(effect (and ~@exprs)))
 
 (defmacro wait-for
   [& body]

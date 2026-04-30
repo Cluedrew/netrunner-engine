@@ -10,7 +10,7 @@
     [game.core.payment :refer [build-cost-label can-pay? merge-costs ->c stealth-value]]
     [game.core.say :refer [system-msg]]
     [game.core.update :refer [update!]]
-    [game.macros :refer [effect msg continue-ability wait-for]]
+    [game.macros :refer [continue-ability effect msg req wait-for]]
     [game.utils :refer [same-card? pluralize quantify remove-once]]
     [jinteki.utils :refer [make-label]]
     [clojure.string :as string]
@@ -294,11 +294,11 @@
   "Use in :static-abilities vectors to give the current ice or program a conditional strength bonus"
   ([bonus]
    {:type :ice-strength
-    :req (effect (same-card? card target))
+    :req (req (same-card? card target))
     :value bonus})
   ([req-fn bonus]
    {:type :ice-strength
-    :req (effect (and (same-card? card target)
+    :req (req (and (same-card? card target)
                    (req-fn state side eid card targets)))
     :value bonus}))
 
@@ -430,7 +430,7 @@
      state side card
      {:type :ice-strength
       :duration duration
-      :req (effect (same-card? card target))
+      :req (req (same-card? card target))
       :value n})
    (update-ice-strength state side (get-card state card))))
 
@@ -455,11 +455,11 @@
   "Use in :static-abilities vectors to give the current ice or program a conditional strength bonus"
   ([bonus]
    {:type :breaker-strength
-    :req (effect (same-card? card target))
+    :req (req (same-card? card target))
     :value bonus})
   ([req-fn bonus]
    {:type :breaker-strength
-    :req (effect (and (same-card? card target)
+    :req (req (and (same-card? card target)
                    (req-fn state side eid card targets)))
     :value bonus}))
 
@@ -493,7 +493,7 @@
                            state side (get-card state card)
                            {:type :breaker-strength
                             :duration duration
-                            :req (effect (same-card? card target))
+                            :req (req (same-card? card target))
                             :value n})]
      (update-breaker-strength state side (get-card state card))
      (trigger-event state side :pump-breaker {:card (get-card state card)
@@ -666,7 +666,7 @@
        (when (some #(= :trash-can (:cost/type %)) (merge-costs cost))
          {:fake-cost [(->c :trash-can)]})
        {:async true
-        :req (effect (and (break-req state side eid card targets)
+        :req (req (and (break-req state side eid card targets)
                        (strength-req state side eid card targets)))
         :break-req break-req
         :break n
@@ -712,7 +712,7 @@
                       (str "add " strength " strength"
                            duration-string
                            (add-stealth-to-label cost))))
-      :req (effect (if-let [str-req (:req args)]
+      :req (req (if-let [str-req (:req args)]
                   (str-req state side eid card targets)
                   true))
       :cost [cost]

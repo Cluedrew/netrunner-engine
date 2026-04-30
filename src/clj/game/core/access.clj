@@ -18,7 +18,7 @@
     [game.core.to-string :refer [card-str]]
     [game.core.update :refer [update!]]
     [game.utils :refer [quantify same-card?]]
-    [game.macros :refer [continue-ability effect wait-for]]
+    [game.macros :refer [continue-ability effect req wait-for]]
     [jinteki.utils :refer [add-cost-to-label]]
     [clojure.set :as clj-set]
     [medley.core :refer [find-first]]
@@ -353,7 +353,7 @@
    (let [cost (if (number? cost) [(->c :credit cost)] cost)]
      {:on-access
       {:optional
-       {:req (effect (and installed (can-pay? state :corp eid card nil cost)))
+       {:req (req (and installed (can-pay? state :corp eid card nil cost)))
         :waiting-prompt (:waiting-prompt ability)
         :prompt prompt
         :yes-ability (dissoc ability :waiting-prompt)}}})))
@@ -1289,7 +1289,7 @@
            state side nil
            {:type :access-bonus
             :duration duration
-            :req (effect (= server target))
+            :req (req (= server target))
             :value bonus})]
      floating-effect)))
 

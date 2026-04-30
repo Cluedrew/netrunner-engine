@@ -16,7 +16,7 @@
    [game.core.say :refer [enforce-msg n-last-logs]]
    [game.core.to-string :refer [card-str]]
    [game.utils :refer [dissoc-in enumerate-str quantify]]
-   [game.macros :refer [msg effect wait-for]]
+   [game.macros :refer [effect msg req wait-for]]
    [jinteki.utils :refer [other-side]]
    [taoensso.timbre :as timbre]))
 
@@ -246,7 +246,7 @@
     {:prevents :trash
      :type :ability
      :label label
-     :ability {:req (effect
+     :ability {:req (req
                       (and (seq (relevant state card))
                            (not (:unpreventable context))
                            (valid-context? context)
@@ -369,7 +369,7 @@
   (letfn [(remainder [state] (get-in @state [:prevent (damage-key state) :remaining]))
           (max-to-avoid [state n] (if (= n :all) (remainder state) (min (remainder state) n)))]
     {:prompt (msg "Choose how much " (damage-name state) " damage prevent")
-     :req (effect (and (preventable? state (damage-key state))
+     :req (req (and (preventable? state (damage-key state))
                     (or (not types)
                         (contains? types (get-in @state [:prevent (damage-key state) :type])))))
      :choices {:number (effect (max-to-avoid state n))
@@ -565,7 +565,7 @@
   (letfn [(remainder [state] (get-in @state [:prevent :tag :remaining]))
           (max-to-avoid [state n] (if (= n :all) (remainder state) (min (remainder state) n)))]
     {:prompt "Choose how many tags to avoid"
-     :req (effect (get-in @state [:prevent :tag]))
+     :req (req (get-in @state [:prevent :tag]))
      :choices {:number (effect (max-to-avoid state n))
                :default (effect (max-to-avoid state n))}
      :async true

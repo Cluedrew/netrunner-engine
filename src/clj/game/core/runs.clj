@@ -20,7 +20,7 @@
     [game.core.subtypes :refer [update-all-subtypes]]
     [game.core.to-string :refer [card-str]]
     [game.core.update :refer [update!]]
-    [game.macros :refer [continue-ability effect wait-for]]
+    [game.macros :refer [continue-ability effect req wait-for]]
     [game.utils :refer [dissoc-in same-card?]]
     [jinteki.utils :refer [count-bad-pub other-side]]
     [clojure.stacktrace :refer [print-stack-trace]]
@@ -593,7 +593,7 @@
         duration (:duration props)]
     {:event :successful-run
      :duration duration
-     :req (effect (and (if use-this-card-run this-card-run true)
+     :req (req (and (if use-this-card-run this-card-run true)
                     (case attacked-server
                       (:archives :rd :hq)
                       (= attacked-server (target-server context))

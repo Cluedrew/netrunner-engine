@@ -6,7 +6,7 @@
     [game.core.engine :refer [resolve-ability]]
     [game.core.moving :refer [trash-cards]]
     [game.core.say :refer [multi-msg]]
-    [game.macros :refer [effect msg continue-ability]]
+    [game.macros :refer [continue-ability effect msg req]]
     [game.utils :refer [enumerate-str enumerate-cards pluralize quantify]]))
 
 (defn choosing-prompt-req
@@ -81,7 +81,7 @@
                                         (continue-ability state side
                                                           (choosing-ab forced-hq)
                                                           card nil))))}]
-    {:req (effect (pos? n))
+    {:req (req (pos? n))
      :msg (msg "sabotage " n)
      :async true
      :effect (effect

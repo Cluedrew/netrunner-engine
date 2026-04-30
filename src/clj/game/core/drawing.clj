@@ -10,7 +10,7 @@
    [game.core.say :refer [system-msg]]
    [game.core.set-aside :refer [set-aside-for-me get-set-aside]]
    [game.core.winning :refer [win-decked]]
-   [game.macros :refer [continue-ability msg effect wait-for]]
+   [game.macros :refer [continue-ability effect msg req wait-for]]
    [game.utils :refer [quantify safe-zero?]]
    [jinteki.utils :refer [other-side]]))
 
@@ -49,7 +49,7 @@
     {:event event
      :msg "draw 1 additional card"
      ;; The req catches draw events that happened before the card was installed
-     :req (effect (first-event? state side event))
+     :req (req (first-event? state side event))
      :once :per-turn
      :effect (effect (draw-bonus state side n))}))
 

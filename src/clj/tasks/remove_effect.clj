@@ -9,6 +9,9 @@
   (-> "
 (defcard 
   {:abilities [{:action true
+                :req (effect (and 1
+                                  2
+                                  3))
                 :cost [(->c :click 1)]
                 :effect (effect (move :corp card :deck nil)
                                 (shuffle! :corp :deck)
@@ -71,11 +74,18 @@
        (= "effect"
           (-> zloc z/down z/string))))
 
+(defn update-req-fn [zloc]
+  (if-let [req (z/get zloc :req)]
+    (when (and (z/list? req)
+               (= 'effect (first (z/sexpr req))))
+      (-> req
+          (z/down)
+          (z/replace 'req)))
+    zloc))
+
 (defn rewrite-file [zloc]
-  (z/prewalk zloc
-             effect-zloc?
-             (fn [zloc]
-               (update-call zloc))))
+  ; (z/prewalk zloc effect-zloc? update-call)
+  (z/prewalk zloc z/map? update-req-fn))
 
 (defn process-file [file]
   (->> (z/of-file file)

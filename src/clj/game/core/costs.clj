@@ -21,7 +21,7 @@
    [game.core.to-string :refer [card-str]]
    [game.core.update :refer [update!]]
    [game.core.virus :refer [number-of-virus-counters]]
-   [game.macros :refer [continue-ability effect wait-for]]
+   [game.macros :refer [continue-ability effect req wait-for]]
    [game.utils :refer [enumerate-cards enumerate-str quantify same-card?]]))
 
 (defn- can-forfeit? [card] (not (get-in card [:flags :cannot-forfeit])))
@@ -338,7 +338,7 @@
      :async true
      :choices {:max (value cost)
                :all true
-               :req (effect (and (is-scored? state side target)
+               :req (req (and (is-scored? state side target)
                               (can-forfeit? target)))}
      :effect (effect (doseq [agenda targets]
                     ;; We don't have to await this because we're suppressing the
@@ -406,7 +406,7 @@
                                    :async true
                                    :choices {:max 1
                                              :all true
-                                             :req (effect (and (is-scored? state side target)
+                                             :req (req (and (is-scored? state side target)
                                                             (can-forfeit? target)))}
                                    :effect (effect (doseq [agenda targets]
                                                   (forfeit state side (make-eid state eid) agenda {:msg false
@@ -846,7 +846,7 @@
     {:prompt (str "Choose " (quantify (value cost) " rezzed Bioroid" "") " to trash")
      :choices {:all true
                :max (value cost)
-               :req (effect (and (installed? target)
+               :req (req (and (installed? target)
                               (rezzed? target)
                               (has-subtype? target "Bioroid")
                               (= (second (get-zone target)) (first (:server (:run @state))))))}
@@ -1225,7 +1225,7 @@
                   " to add to HQ")
      :choices {:max (value cost)
                :all true
-               :req (effect (and (corp? target)
+               :req (req (and (corp? target)
                               (same-card? (:host target) card)))}
      :async true
      :effect (effect (let [cards (keep #(move state :corp % :hand) targets)]

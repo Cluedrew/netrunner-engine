@@ -35,7 +35,7 @@
    [game.core.trace :refer [init-trace]]
    [game.core.update :refer [update!]]
    [game.core.winning :refer [clear-win]]
-   [game.macros :refer [continue-ability msg effect wait-for]]
+   [game.macros :refer [continue-ability effect msg req wait-for]]
    [game.utils :refer [dissoc-in enumerate-str quantify safe-split
                        same-card? same-side? server-card string->num]]
    [jinteki.utils :refer [other-side str->int]]))
@@ -347,7 +347,7 @@
      state side
      {:prompt "Choose an agenda to score"
       :waiting-prompt true
-      :choices {:req (effect (and (agenda? target)
+      :choices {:req (req (and (agenda? target)
                                (or (installed? target)
                                    (in-hand? target))))}
       :msg (msg "score " (card-str state target {:visible true}) ", ignoring all restrictions")

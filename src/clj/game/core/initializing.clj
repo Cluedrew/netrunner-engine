@@ -14,7 +14,7 @@
     [game.core.payment :refer [add-cost-label-to-ability]]
     [game.core.props :refer [add-counter]]
     [game.core.update :refer [update!]]
-    [game.macros :refer [effect]]
+    [game.macros :refer [effect req]]
     [game.utils :refer [make-cid make-timestamp server-card to-keyword]]
     [jinteki.utils :refer [make-label]]))
 
@@ -129,7 +129,7 @@
          (register-events
            state side c
            [{:event (if (= side :corp) :corp-phase-12 :runner-phase-12)
-             :req (effect (not (:disabled card)))
+             :req (req (not (:disabled card)))
              :async true
              :effect r}])))
      (register-default-events state side c)

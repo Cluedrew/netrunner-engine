@@ -1,13 +1,7 @@
 (ns game.core.threat
   (:require
-    [clojure.string :as string]
-    [game.core.card :refer [corp? in-hand?]]
     [game.core.eid :refer [effect-completed]]
-    [game.core.engine :refer [resolve-ability]]
-    [game.core.moving :refer [trash-cards]]
-    [game.core.say :refer [system-msg]]
-    [game.macros :refer [effect msg continue-ability]]
-    [game.utils :refer [pluralize]]))
+    [game.macros :refer [effect req continue-ability]]))
 
 (defn threat-level [threshold state]
   ;; does the threat level meet or exceed the given threshold
@@ -22,7 +16,7 @@
   ([threshold accept-ab]
    (threat threshold accept-ab nil))
   ([threshold accept-ab reject-ab]
-   {:req (effect true)
+   {:req (req true)
     :async true
     :effect (effect (if (threat-level threshold state)
                    (continue-ability state side accept-ab card targets)

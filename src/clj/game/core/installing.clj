@@ -27,7 +27,7 @@
     [game.core.to-string :refer [card-str]]
     [game.core.toasts :refer [toast]]
     [game.core.update :refer [update!]]
-    [game.macros :refer [continue-ability effect wait-for]]
+    [game.macros :refer [continue-ability effect req wait-for]]
     [game.utils :refer [dissoc-in enumerate-str in-coll? same-card? to-keyword quantify]]
     [medley.core :refer [find-first]]))
 
@@ -378,7 +378,7 @@
             c card]
         (cond (and possible? (pos? need-to-trash))
               (letfn [(trash-all-or-none [] {:prompt (str "Trash ice protecting " (name-zone :corp slot) " (minimum " need-to-trash ")")
-                                             :choices {:req (effect (= (:zone target) slot))
+                                             :choices {:req (req (= (:zone target) slot))
                                                        :max cards-in-slot}
                                              :waiting-prompt true
                                              :async true
@@ -394,7 +394,7 @@
               (continue-ability
                 state side
                 {:prompt (str "Trash any number of " (if (ice? c) "ice protecting " "cards in ") (name-zone :corp slot))
-                 :choices {:req (effect (= (:zone target) slot))
+                 :choices {:req (req (= (:zone target) slot))
                            :max cards-in-slot}
                  :async true
                  :waiting-prompt true
@@ -705,7 +705,7 @@
         (continue-ability
           state side
           {:prompt (str (:title potential-host) " can only handle " max-mu " MU of programs - trash programs on " (:title card) " worth at least " to-eliminate " MU")
-           :choices {:req (effect (and (program? target)
+           :choices {:req (req (and (program? target)
                                     (some #(same-card? % target) relevant-cards)))
                      :max (count relevant-cards)
                      :min 1}
@@ -737,7 +737,7 @@
         (continue-ability
           state side
           {:prompt (str "Insufficient Space - Choose at least " (quantify to-destroy "card") " on " (:title potential-host) " to trash")
-           :choices {:req (effect (some #(same-card? % target) relevant-cards))
+           :choices {:req (req (some #(same-card? % target) relevant-cards))
                      :min to-destroy
                      :max (count relevant-cards)}
            :async true

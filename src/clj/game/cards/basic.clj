@@ -22,7 +22,7 @@
    [game.core.say :refer [play-sfx system-msg]]
    [game.core.tags :refer [lose-tags]]
    [game.core.to-string :refer [card-str]]
-   [game.macros :refer [msg effect wait-for]]
+   [game.macros :refer [effect msg req wait-for]]
    [game.utils :refer :all]
    [jinteki.utils :refer :all]))
 ;; Card definitions
@@ -39,7 +39,7 @@
                                        (effect-completed state side eid)))}
                {:action true
                 :label "Draw 1 card"
-                :req (effect (not-empty (:deck corp)))
+                :req (req (not-empty (:deck corp)))
                 :cost [(->c :click)]
                 :msg "draw 1 card"
                 :async true
@@ -50,7 +50,7 @@
                {:action true
                 :label "Install 1 agenda, asset, upgrade, or piece of ice from HQ"
                 :async true
-                :req (effect (let [{target-card :card server :server} context]
+                :req (req (let [{target-card :card server :server} context]
                             (and (not-empty (:hand corp))
                                  (in-hand? target-card)
                                  (or (agenda? target-card)
@@ -81,7 +81,7 @@
                {:action true
                 :label "Play 1 operation"
                 :async true
-                :req (effect (let [target-card (:card context)]
+                :req (req (let [target-card (:card context)]
                             (and (not-empty (:hand corp))
                                  (in-hand? target-card)
                                  (operation? target-card)
@@ -101,11 +101,11 @@
                 :label "Trash 1 resource if the Runner is tagged"
                 :cost [(->c :click 1) (->c :credit 2)]
                 :async true
-                :req (effect tagged)
+                :req (req tagged)
                 :prompt "Choose a resource to trash"
                 :msg (msg "trash " (:title target))
                 ;; I hate that we need to modify the basic action card like this, but I don't think there's any way around it -nbkelly, '24
-                :choices {:req (effect (and (if (and (untrashable-while-resources? target)
+                :choices {:req (req (and (if (and (untrashable-while-resources? target)
                                                   (< (count (filter resource? (all-active-installed state :runner))) 2))
                                            true
                                            (not (untrashable-while-resources? target)))
@@ -163,7 +163,7 @@
                                        (effect-completed state side eid)))}
                {:action true
                 :label "Draw 1 card"
-                :req (effect (not-empty (:deck runner)))
+                :req (req (not-empty (:deck runner)))
                 :cost [(->c :click)]
                 :msg "draw 1 card"
                 :async true
@@ -174,7 +174,7 @@
                {:action true
                 :label "Install 1 program, resource, or piece of hardware from the grip"
                 :async true
-                :req (effect (let [target-card (:card context)]
+                :req (req (let [target-card (:card context)]
                             (and (in-hand*? state (get-card state target-card))
                                  (or (hardware? target-card)
                                      (program? target-card)
@@ -189,7 +189,7 @@
                {:action true
                 :label "Play 1 event"
                 :async true
-                :req (effect (let [target-card (:card context)]
+                :req (req (let [target-card (:card context)]
                             (and (in-hand*? state (get-card state target-card))
                                  (event? target-card)
                                  (can-play-instant? state :runner (assoc eid :source-type :play)
@@ -204,7 +204,7 @@
                 :label "Remove 1 tag"
                 :cost [(->c :click 1) (->c :credit 2)]
                 :msg "remove 1 tag"
-                :req (effect tagged)
+                :req (req tagged)
                 :async true
                 :effect (effect (play-sfx state side "click-remove-tag")
                                 (lose-tags state side eid 1))}]})

@@ -14,7 +14,7 @@
     [game.core.revealing :refer [reveal]]
     [game.core.say :refer [play-sfx system-msg implementation-msg]]
     [game.core.update :refer [update!]]
-    [game.macros :refer [continue-ability msg effect wait-for]]
+    [game.macros :refer [continue-ability effect msg req wait-for]]
     [game.utils :refer [same-card? to-keyword]]))
 
 (defn async-rfg
@@ -192,7 +192,7 @@
            {:optional
             {:prompt (str "Pay the additional costs to play " (:title card) "?")
              :yes-ability {:async true
-                           :req (effect (can-pay? state side eid (get-card state card) nil costs))
+                           :req (req (can-pay? state side eid (get-card state card) nil costs))
                            :effect (effect (continue-play-instant state side (assoc eid :source card :source-type :play) c costs args))}
              :no-ability {:cost (when (:base-cost args) [(:base-cost args)])
                           :async true
