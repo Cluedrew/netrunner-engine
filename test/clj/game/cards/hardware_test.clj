@@ -1453,7 +1453,9 @@
       (is (= 4 (count (:hand (get-runner)))) "4 cards in hand before using Capstone")
       (dotimes [n 4]
         (click-card state :runner (nth (:hand (get-runner)) n))))
-    (is (= 3 (count (:hand (get-runner)))) "3 cards in hand after using Capstone")))
+    (is (= 3 (count (:hand (get-runner)))) "3 cards in hand after using Capstone")
+    (is (last-log-contains? state "Runner uses Capstone to trash Cache, Corroder, Corroder, and Patchwork"))
+    (is (last-log-contains? state "draw 3 cards"))))
 
 (deftest capybara-no-ice
     ;; No ice

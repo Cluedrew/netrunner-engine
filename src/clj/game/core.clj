@@ -584,6 +584,7 @@
 
 (expose-vars
   [game.core.payment
+   ->c
    add-cost-label-to-ability
    build-cost-label
    build-cost-string

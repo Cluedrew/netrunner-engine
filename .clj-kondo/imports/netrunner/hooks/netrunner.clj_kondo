@@ -1,0 +1,17 @@
+(ns hooks.netrunner
+  (:require
+    [clj-kondo.hooks-api :as api]))
+
+(defn wait-for [{:keys [node]}]
+  (let [[_wait-for action & body] (:children node)
+        bind? (api/vector-node? action)
+        new-node (api/list-node
+                  (list*
+                   (api/token-node 'let)
+                   (if bind?
+                     (api/vector-node [(first (:children action))
+                                       (vary-meta (second (:children action)) assoc :clj-kondo/ignore [:invalid-arity])])
+                     (api/vector-node [(api/token-node 'async-result)
+                                       (vary-meta action assoc :clj-kondo/ignore [:invalid-arity])]))
+                   body))]
+    {:node (with-meta new-node (meta node))}))

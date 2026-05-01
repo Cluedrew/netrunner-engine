@@ -515,19 +515,18 @@
                           :card #(and (runner? %)
                                       (in-hand? %))}
                 :effect (effect (let [trashed-card-names (keep :title targets)
-                                   installed-card-names (keep :title (all-active-installed state :runner))
-                                   overlap (set/intersection (set trashed-card-names)
-                                                                 (set installed-card-names))]
-                               (wait-for (trash-cards state side targets {:unpreventable true
-                                                                          :cause-card card})
-                                         (let [trashed-cards async-result]
-                                           (wait-for (draw state side (count (filter overlap trashed-card-names)))
-                                                     (system-msg state side
-                                                                 (str "uses " (:title card) " to trash "
-                                                                      (enumerate-cards trashed-cards)
-                                                                      " from the grip and draw "
-                                                                      (quantify (count async-result) "card")))
-                                                     (effect-completed state side eid))))))}]})
+                                      installed-card-names (keep :title (all-active-installed state :runner))
+                                      overlap (set/intersection (set trashed-card-names)
+                                                                (set installed-card-names))]
+                                  (wait-for [trashed-cards (trash-cards state side targets {:unpreventable true
+                                                                                            :cause-card card})]
+                                    (wait-for [drawn-cards (draw state side (count (filter overlap trashed-card-names)))]
+                                      (system-msg state side
+                                                  (str "uses " (:title card) " to trash "
+                                                       (enumerate-cards trashed-cards true)
+                                                       " from the grip and draw "
+                                                       (quantify (count drawn-cards) "card")))
+                                      (effect-completed state side eid)))))}]})
 
 (defcard "Capybara"
   {:events [{:event :bypassed-ice

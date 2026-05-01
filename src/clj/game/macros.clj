@@ -95,11 +95,37 @@
   `(effect (and ~@exprs)))
 
 (defmacro wait-for
-  [& body]
-  (let [[binds action] (if (vector? (first body))
-                         (first body)
-                         [[{'async-result :result}] (first body)])
-        expr (next body)
+  "Wrap `body` in a callback, execute `action` with the assumption that `action` will call
+  `effect-completed` on an `eid`, which will execute the callback. The `eid` can be skipped
+  in the action call, resulting in a fresh eid being inserted (using `(make-eid state eid)`
+  with the assumption that an `eid` exists in the local environment).
+
+  First arg can either be the async function call (a function that takes an `eid` at arg 3)
+  or a 2-element vector of the async-result and the async function call. If a binding vector
+  is not given, the anaphoric variable `async-result` is bound.
+
+  For example:
+  ```clojure
+  (wait-for (draw state :corp 1)
+    (system-msg state :corp async-result)
+    (effect-completed state :corp eid)))
+  ;; is equivalent to
+  ; (wait-for [async-result (draw state :corp (make-eid state eid) 1)]
+  ;   (system-msg state :corp async-result)
+  ;   (effect-completed state :corp eid)))
+
+  ;; both the eid and the bound variable can be changed
+  (wait-for [drawn-cards (draw state :corp some-other-eid 1)]
+    (system-msg state :corp drawn-cards)
+    (effect-completed state :corp eid)))
+  ```"
+  {:arglists '([action & body] [[binding action] & body])}
+  [action & body]
+  (when (vector? action)
+    (assert (= 2 (count action)) "Both bind and call must be in binding vec"))
+  (let [[binds action] (if (vector? action)
+                         [[{(first action) :result}] (second action)]
+                         [[{'async-result :result}] action])
         abnormal? (#{'handler 'payable?} (first action))
         to-take (if abnormal? 4 3)
         fn-name (gensym (name (first action)))
@@ -111,7 +137,8 @@
        (game.core.eid/register-effect-completed
          ~state new-eid#
          (fn ~fn-name ~(if (vector? binds) binds [binds])
-           ~@expr))
+           (let [ret# (do ~@body)]
+             ret#)))
        (if use-eid#
          (~@(take to-take action) new-eid# ~@(drop (inc to-take) action))
          (~@(take to-take action) new-eid# ~@(drop to-take action))))))
@@ -122,8 +149,8 @@
                (system-msg state :corp async-result)
                (effect-completed state :corp eid)))
   (macroexpand
-    '(wait-for [{card :result} (draw state :corp (make-eid state) 1)]
-               (system-msg state :corp card)
+    '(wait-for [drawn-cards (draw state :corp (make-eid state) 1)]
+               (system-msg state :corp drawn-cards)
                (effect-completed state :corp eid)))
   )
 
