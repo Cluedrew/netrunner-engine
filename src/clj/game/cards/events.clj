@@ -294,30 +294,30 @@
 (defcard "Beta Build"
   {:makes-run true
    :on-play {:async true
-             :effect (effect (wait-for
-                            (resolve-ability
-                              state side
-                              {:prompt "Install a non-virus program"
-                               :choices (effect (cancellable (filter #(and (program? %)
-                                                                        (runner-can-install? state side eid % {:no-toast true}))
-                                                                  (:deck runner))))
-                               :async true
-                               :effect (effect (wait-for
-                                              (runner-install state side target {:ignore-all-cost :true :msg-keys {:display-origin true :source-card card}})
-                                              (complete-with-result state side eid async-result)))}
-                              card nil)
-                            (let [installed-card async-result]
-                              (resolve-ability state side eid
-                                               (run-any-server-ability {:events [{:event :run-ends
-                                                                                  :unregister-once-resolved true
-                                                                                  :duration :end-of-run
-                                                                                  :interactive (effect true)
-                                                                                  :automatic :last
-                                                                                  :change-in-game-state {:silent true
-                                                                                                         :req (req (get-card state installed-card))}
-                                                                                  :msg (msg "add " (:title installed-card) " to the top of the stack")
-                                                                                  :effect (effect (move state side installed-card :deck {:front true}))}]})
-                                               card nil))))}})
+             :effect
+             (effect (wait-for
+                       [installed-card
+                        (resolve-ability
+                          state side
+                          {:prompt "Install a non-virus program"
+                           :choices (effect (cancellable (filter #(and (program? %)
+                                                                       (runner-can-install? state side eid % {:no-toast true}))
+                                                                 (:deck runner))))
+                           :async true
+                           :effect (effect (runner-install state side eid target {:ignore-all-cost :true :msg-keys {:display-origin true :source-card card}}))}
+                          card nil)]
+                       (continue-ability state side
+                         (run-any-server-ability
+                           {:events [{:event :run-ends
+                                      :unregister-once-resolved true
+                                      :duration :end-of-run
+                                      :interactive (effect true)
+                                      :automatic :last
+                                      :change-in-game-state {:silent true
+                                                             :req (req (get-card state installed-card))}
+                                      :msg (msg "add " (:title installed-card) " to the top of the stack")
+                                      :effect (effect (move state side installed-card :deck {:front true}))}]})
+                         card nil)))}})
 
 (defcard "Black Hat"
   {:on-play
@@ -780,30 +780,30 @@
              :async true
              :cancel (when (= :deck where) fail-to-find!)
              :effect (effect (when (= :deck where)
-                            (trigger-event state side :searched-stack)
-                            (shuffle! state side :deck))
-                          (wait-for
-                            (runner-install state side target
-                                            {:ignore-all-cost true
-                                             :msg-keys {:display-origin true
-                                                        :install-source card}})
-                            (when-let [installed-card async-result]
-                              (register-lingering-effect
-                                state side card
-                                {:type :icon
-                                 :duration :end-of-run
-                                 :req (req (same-card? target installed-card))
-                                 :value (make-icon "C" card)})
-                              (register-events
-                                state side card
-                                [{:duration :end-of-run
-                                  :event :run-ends
-                                  :interactive (effect true)
-                                  :change-in-game-state {:req (req (installed? (get-card state installed-card)))
-                                                         :silent true}
-                                  :msg (msg "move " (card-str state installed-card) " to the bottom of the stack")
-                                  :effect (effect (move state side installed-card :deck))}]))
-                            (effect-completed state side eid)))})]
+                               (trigger-event state side :searched-stack)
+                               (shuffle! state side :deck))
+                             (wait-for
+                               [installed-card (runner-install state side target
+                                                               {:ignore-all-cost true
+                                                                :msg-keys {:display-origin true
+                                                                           :install-source card}})]
+                               (when installed-card
+                                 (register-lingering-effect
+                                  state side card
+                                  {:type :icon
+                                   :duration :end-of-run
+                                   :req (req (same-card? target installed-card))
+                                   :value (make-icon "C" card)})
+                                 (register-events
+                                  state side card
+                                  [{:duration :end-of-run
+                                    :event :run-ends
+                                    :interactive (effect true)
+                                    :change-in-game-state {:req (req (installed? (get-card state installed-card)))
+                                                           :silent true}
+                                    :msg (msg "move " (card-str state installed-card) " to the bottom of the stack")
+                                    :effect (effect (move state side installed-card :deck))}]))
+                               (effect-completed state side eid)))})]
     {:makes-run true
      :on-play (run-any-server-ability)
      :events [{:event :encounter-ice
@@ -1056,30 +1056,26 @@
                                          :choices ["OK"]}
                                         card nil)
                        (wait-for
-                         (resolve-ability state side (deep-dive-access top-8) card nil)
-                         (if (seq async-result)
+                         [cards (resolve-ability state side (deep-dive-access top-8) card nil)]
+                         (if-let [cards (seq cards)]
                            (wait-for
-                             (resolve-ability state side
-                                              {:optional
-                                               {:prompt "Pay [Click] to access another card?"
-                                                :req (req (can-pay? state :runner
-                                                                    (assoc eid :source card :source-type :ability)
-                                                                    card nil [(->c :click 1)]))
-                                                :no-ability
-                                                {:effect (effect (system-msg state side (str "declines to use "
-                                                                                  (:title card)
-                                                                                  " to access another card")))}
-                                                :yes-ability
-                                                {:async true
-                                                 :cost [(->c :click 1)]
-                                                 :msg "access another card"
-                                                 :effect
-                                                 (effect (wait-for
-                                                        (resolve-ability state side
-                                                                         (deep-dive-access async-result)
-                                                                         card nil)
-                                                        (effect-completed state side eid)))}}}
-                                              card nil)
+                             (resolve-ability
+                               state side
+                               {:optional
+                                {:prompt "Pay [Click] to access another card?"
+                                 :req (req (can-pay? state :runner
+                                                     (assoc eid :source card :source-type :ability)
+                                                     card nil [(->c :click 1)]))
+                                 :no-ability
+                                 {:effect (effect (system-msg state side (str "declines to use "
+                                                                              (:title card)
+                                                                              " to access another card")))}
+                                 :yes-ability
+                                 {:async true
+                                  :cost [(->c :click 1)]
+                                  :msg "access another card"
+                                  :effect (effect (continue-ability state side (deep-dive-access cards) card nil))}}}
+                               card nil)
                              (do (shuffle-back state (get-set-aside state :corp eid))
                                  (effect-completed state side eid)))
                            (do (shuffle-back state (get-set-aside state :corp eid))
@@ -1248,14 +1244,12 @@
                             (= (last (get-zone topmost)) :content)
                             (not (:rezzed %))))}
     :async true
-    :effect (effect (wait-for (expose state side [target])
-                           (if-let [target (when async-result (first (:cards async-result)))]
-                             (if (or (asset? target)
-                                     (upgrade? target))
-                               (do (system-msg state :runner (str "uses " (:title card) " to trash " (:title target)))
-                                   (trash state :runner eid (assoc target :seen true) {:cause-card card}))
-                               (effect-completed state side eid))
-                             (effect-completed state side eid))))}})
+    :effect (effect (wait-for [{[exposed] :cards} (expose state side [target])]
+                      (if (or (asset? exposed)
+                              (upgrade? exposed))
+                        (do (system-msg state :runner (str "uses " (:title card) " to trash " (:title exposed)))
+                            (trash state :runner eid (assoc exposed :seen true) {:cause-card card}))
+                        (effect-completed state side eid))))}})
 
 (defcard "Early Bird"
   {:makes-run true
@@ -1519,21 +1513,22 @@
     :async true
     :effect (effect
               (continue-ability
-                state side (let [chosen-type target]
+                state side
+                (let [chosen-type target]
                   {:choices {:card #(let [topmost (get-nested-host %)]
                                       (and (is-remote? (second (get-zone topmost)))
                                            (= (last (get-zone topmost)) :content)
                                            (not (rezzed? %))))}
                    :async true
-                   :effect (effect (wait-for (expose state side [target])
-                                          (continue-ability
-                                            state :runner
-                                            (when (and async-result ;; expose was successful
-                                                       (= chosen-type (:type target)))
-                                              {:msg "gain 5 [Credits]"
-                                               :async true
-                                               :effect (effect (gain-credits state side eid 5))})
-                                            card nil)))})
+                   :effect (effect (wait-for [{[exposed] :cards} (expose state side [target])]
+                                     (continue-ability
+                                       state :runner
+                                       (when (and exposed
+                                                  (= chosen-type (:type target)))
+                                         {:msg "gain 5 [Credits]"
+                                          :async true
+                                          :effect (effect (gain-credits state side eid 5))})
+                                       card nil)))})
                 card nil))}})
 
 (defcard "Fear the Masses"
@@ -2232,42 +2227,46 @@
                                  :choices (mapv str (for [x (->> current-values keys last inc (range 1) (#(concat % [99])))]
                                                       (str x " [Credit]: "
                                                            (quantify (get current-values x 0) "card"))))
-                                 :effect (effect (complete-with-result
-                                                   state side eid [(str->int (first (str/split target #" ")))
-                                                        (min 6 (str->int (nth (str/split target #" ") 2)))]))}))
+                                 :effect (effect
+                                          (prn target)
+                                          (complete-with-result
+                                            state side eid
+                                            [(str->int (first (str/split target #" ")))
+                                             (min 6 (str->int (nth (str/split target #" ") 2)))]))}))
         access-effect
         {:async true
-         :effect (effect (wait-for
-                        (resolve-ability state side (select-install-cost state) card nil)
-                        (let [revealed (seq (take (second async-result) (:deck corp)))]
-                          (system-msg state :runner (str "uses " (:title card) " to choose an install cost of "
-                                                         (first async-result)
-                                                         " [Credit] and reveals "
-                                                         (if revealed
-                                                           (str (enumerate-cards revealed)
-                                                                " from the top of R&D (top->bottom)")
-                                                           "no cards")))
-                          (wait-for
-                            (resolve-ability
-                              state side
-                              (when revealed
-                                {:async true
-                                 :effect (effect (reveal state side eid revealed))})
-                              card nil)
-                            (wait-for
-                              (resolve-ability state side (when (and revealed (not (get-only-card-to-access state)))
-                                                            (access-revealed revealed))
-                                               card nil)
-                              (shuffle! state :corp :deck)
-                              (system-msg state :runner "shuffles R&D")
-                              (effect-completed state side eid))))))}]
+         :effect (effect
+                  (wait-for
+                    [[install-cost reveals](resolve-ability state side (select-install-cost state) card nil)]
+                    (let [revealed (seq (take reveals (:deck corp)))]
+                      (system-msg state :runner (str "uses " (:title card) " to choose an install cost of "
+                                                     install-cost
+                                                     " [Credit] and reveals "
+                                                     (if revealed
+                                                       (str (enumerate-cards revealed)
+                                                            " from the top of R&D (top->bottom)")
+                                                       "no cards")))
+                      (wait-for
+                        (resolve-ability
+                          state side
+                          (when revealed
+                            {:async true
+                             :effect (effect (reveal state side eid revealed))})
+                          card nil)
+                        (wait-for
+                          (resolve-ability state side (when (and revealed (not (get-only-card-to-access state)))
+                                                        (access-revealed revealed))
+                            card nil)
+                          (shuffle! state :corp :deck)
+                          (system-msg state :runner "shuffles R&D")
+                          (effect-completed state side eid))))))}]
     {:makes-run true
      :on-play (run-server-ability :rd)
      :events [(successful-run-replace-breach
-                {:target-server :rd
-                 :this-card-run true
-                 :mandatory true
-                 :ability access-effect})]}))
+               {:target-server :rd
+                :this-card-run true
+                :mandatory true
+                :ability access-effect})]}))
 
 (defcard "Knifed"
   (cutlery "Barrier"))
@@ -2634,11 +2633,10 @@
                    "Take 1 bad publicity"])
     :async true
     :effect (effect (if (= target "Pay 5 [Credits]")
-                   (wait-for (pay state :corp (make-eid state eid) card (->c :credit 5))
-                             (system-msg state :corp (:msg async-result))
-                             (effect-completed state side eid))
-                   (do (gain-bad-publicity state :corp 1)
-                       (effect-completed state side eid))))}})
+                      (wait-for [{:keys [msg]} (pay state :corp (make-eid state eid) card (->c :credit 5))]
+                        (system-msg state :corp msg)
+                        (effect-completed state side eid))
+                      (gain-bad-publicity state :corp eid 1)))}})
 
 (defcard "Möbius"
   {:on-play
@@ -3247,10 +3245,8 @@
     {:on-play
      {:req (req (some valid-target? (all-installed state :runner)))
       :async true
-      :effect (effect (wait-for (resolve-ability state side pick-up card nil)
-                             (continue-ability state side
-                                               (put-down async-result)
-                                               card nil)))}}))
+      :effect (effect (wait-for [install-cost (resolve-ability state side pick-up card nil)]
+                        (continue-ability state side (put-down install-cost) card nil)))}}))
 
 (defcard "Reprise"
   (letfn [(opt-run []
@@ -3354,20 +3350,20 @@
                              (runner-can-pay-and-install? state side (assoc eid :source card) target {:cost-bonus -3}))}
     :change-in-game-state {:req (req (seq (all-cards-in-hand* state :runner)))}
     :async true
-    :effect (effect (wait-for (runner-install state side (make-eid state {:source card :source-type :runner-install}) target {:cost-bonus -3
-                                                                                                                           :msg-keys {:install-source card
-                                                                                                                                      :display-origin true}})
-                           (let [rig-target async-result]
-                             (continue-ability
-                               state side
-                               {:optional
-                                {:prompt (str "Charge " (:title rig-target) "?")
-                                 :req (req (can-charge state side rig-target))
-                                 :yes-ability
-                                 {:async true
-                                  :effect (effect (charge-card state side eid rig-target))
-                                  :msg (msg "charge " (:title rig-target))}}}
-                               card nil))))}})
+    :effect (effect (wait-for [rig-target (runner-install state side (make-eid state {:source card})
+                                                          target {:cost-bonus -3
+                                                                  :msg-keys {:install-source card
+                                                                             :display-origin true}})]
+                      (continue-ability
+                        state side
+                        {:optional
+                         {:prompt (str "Charge " (:title rig-target) "?")
+                          :req (req (can-charge state side rig-target))
+                          :yes-ability
+                          {:async true
+                           :effect (effect (charge-card state side eid rig-target))
+                           :msg (msg "charge " (:title rig-target))}}}
+                        card nil)))}})
 
 (defcard "Rip Deal"
   (let [add-cards-from-heap
@@ -3929,31 +3925,32 @@
     :async true
     :effect (effect
               (continue-ability
-                state side (let [where target
+                state side
+                (let [where target
                       where-key (if (= where "Heap") :discard :deck)]
                   {:prompt "Choose a program to install"
                    :choices (effect (cancellable
-                                   (filter #(and (program? %) (runner-can-install? state side eid % {:no-toast true})) (where-key runner))))
+                                     (filter #(and (program? %) (runner-can-install? state side eid % {:no-toast true})) (where-key runner))))
                    :async true
                    :cancel (when (= where "Stack") fail-to-find!)
                    :effect (effect (when (= where "Stack")
-                                  (trigger-event state side :searched-stack)
-                                  (shuffle! state side :deck))
-                                (wait-for (runner-install state side (make-eid state {:source card :source-type :runner-install})
-                                                          target {:ignore-all-cost true
-                                                                  :msg-keys {:install-source card
-                                                                             :display-origin true}})
-                                          (if async-result
-                                            (let [installed-card (update! state side (assoc-in async-result [:special :test-run] true))]
-                                              (register-events
-                                                state side installed-card
-                                                [{:event :runner-turn-ends
-                                                  :duration :end-of-turn
-                                                  :req (req (get-in (find-latest state installed-card) [:special :test-run]))
-                                                  :msg (msg "move " (:title installed-card) " to the top of the stack")
-                                                  :effect (effect (move state side (find-latest state installed-card) :deck {:front true}))}])
-                                              (effect-completed state side eid))
-                                            (effect-completed state side eid))))})
+                                     (trigger-event state side :searched-stack)
+                                     (shuffle! state side :deck))
+                                   (wait-for [installed-card (runner-install state side (make-eid state {:source card})
+                                                                             target {:ignore-all-cost true
+                                                                                     :msg-keys {:install-source card
+                                                                                                :display-origin true}})]
+                                     (when-let [installed-card (when installed-card
+                                                                 (->> (assoc-in installed-card [:special :test-run] true)
+                                                                      (update! state side)))]
+                                       (register-events
+                                        state side installed-card
+                                        [{:event :runner-turn-ends
+                                          :duration :end-of-turn
+                                          :req (req (get-in (find-latest state installed-card) [:special :test-run]))
+                                          :msg (msg "move " (:title installed-card) " to the top of the stack")
+                                          :effect (effect (move state side (find-latest state installed-card) :deck {:front true}))}]))
+                                     (effect-completed state side eid)))})
                 card nil))}})
 
 (defcard "The Maker's Eye"
@@ -3962,7 +3959,7 @@
    :events [{:event :successful-run
              :silent true
              :req (req (= :rd (target-server context))
-                            this-card-run)
+                       this-card-run)
              :effect (effect (register-events
                               state side card [(breach-access-bonus :rd 2 {:duration :end-of-run})]))}]})
 
@@ -4009,26 +4006,26 @@
              :change-in-game-state {:req (req (seq (:deck runner)))}
              :effect
              (effect
-               (wait-for (mill state :runner (make-eid state eid) :runner 4)
-                         (let [trashed-cards async-result]
-                           (system-msg state side
-                                       (str "uses " (:title card) " to trash "
-                                            (enumerate-cards trashed-cards)
-                                            " from the top of the stack"))
-                           (continue-ability
-                             state side
-                             {:prompt "Choose a card to install"
-                              :waiting-prompt true
-                              :async true
-                              :req (req (not (zone-locked? state :runner :discard)))
-                              :choices (effect (cancellable (filter #(and (not (event? %))
-                                                                       (runner-can-pay-and-install? state side (assoc eid :source card) % {:cost-bonus -3})
-                                                                       (in-discard? (get-card state %))) trashed-cards)))
-                              :effect (effect (let [card-to-install (first (seq (filter #(and (= (:title target) (:title %)) (in-discard? (get-card state %))) trashed-cards)))]
-                                             (runner-install state side (assoc eid :source card :source-type :runner-install) card-to-install {:cost-bonus -3
-                                                                                                                                               :msg-keys {:install-source card
-                                                                                                                                                          :display-origin true}})))}
-                             card nil))))}})
+               (wait-for [trashed-cards (mill state :runner (make-eid state eid) :runner 4)]
+                 (system-msg state side
+                             (str "uses " (:title card) " to trash "
+                                  (enumerate-cards trashed-cards)
+                                  " from the top of the stack"))
+                 (continue-ability
+                   state side
+                   {:prompt "Choose a card to install"
+                    :waiting-prompt true
+                    :async true
+                    :req (req (not (zone-locked? state :runner :discard)))
+                    :choices (effect (cancellable (filter #(and (not (event? %))
+                                                                (runner-can-pay-and-install? state side (assoc eid :source card) % {:cost-bonus -3})
+                                                                (in-discard? (get-card state %))) trashed-cards)))
+                    :effect (effect (let [card-to-install (first (filter #(and (= (:title target) (:title %)) (in-discard? (get-card state %))) trashed-cards))]
+                                      (runner-install state side (assoc eid :source card)
+                                                      card-to-install {:cost-bonus -3
+                                                                       :msg-keys {:install-source card
+                                                                                  :display-origin true}})))}
+                   card nil)))}})
 
 (defcard "The Price of Freedom"
   {:on-play {:additional-cost [(->c :connection 1)]
@@ -4220,8 +4217,8 @@
                 :choices (effect (map str (range 0 (inc (:click runner)))))
                 :async true
                 :effect (effect (let [n (str->int target)]
-                               (wait-for (pay state :runner (make-eid state eid) card (->c :click n))
-                                         (system-msg state :runner (:msg async-result))
+                               (wait-for [{:keys [msg]} (pay state :runner (make-eid state eid) card (->c :click n))]
+                                         (system-msg state :runner msg)
                                          (trash-cards state :corp eid (take n (shuffle (:hand corp))) {:cause-card card}))))}})]})
 
 (defcard "Watch the World Burn"

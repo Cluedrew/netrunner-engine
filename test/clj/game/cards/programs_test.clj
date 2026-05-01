@@ -8,7 +8,7 @@
    [game.core.ice :refer [pump-ice update-all-icebreakers]]
    [game.core.payment :refer [->c]]
    [game.core.props :refer [add-counter]]
-   [game.core.threat :refer [threat-level get-threat-level]]
+   [game.core.threat :refer [threat-level]]
    [game.test-framework :refer :all]
    [game.utils :as utils]))
 

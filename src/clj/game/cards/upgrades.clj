@@ -225,17 +225,16 @@
                :choices (effect (filter #(can-pay-to-rez? state side (assoc eid :source card)
                                                        % {:cost-bonus -7})
                                      (:hosted card)))
-               :effect (effect (wait-for (rez state side target {:cost-bonus -7})
-                                      (let [ice (:card async-result)]
-                                        (register-events
-                                          state side card
-                                          [{:event :run-ends
-                                            :duration :end-of-run
-                                            :async true
-                                            :req (req (get-card state ice))
-                                            :effect (effect (trash state side eid (get-card state ice) {:cause-card card}))}])
-                                        (system-msg state side (str "uses " (:title card) " to force the Runner to encounter " (card-str state ice)))
-                                        (force-ice-encounter state side eid ice))))}
+               :effect (effect (wait-for [{ice :card} (rez state side target {:cost-bonus -7})]
+                                 (register-events
+                                  state side card
+                                  [{:event :run-ends
+                                    :duration :end-of-run
+                                    :async true
+                                    :req (req (get-card state ice))
+                                    :effect (effect (trash state side eid (get-card state ice) {:cause-card card}))}])
+                                 (system-msg state side (str "uses " (:title card) " to force the Runner to encounter " (card-str state ice)))
+                                 (force-ice-encounter state side eid ice)))}
               :no-ability
               {:effect (effect (system-msg state side (str "declines to use " (:title card))))}}}]})
 
@@ -447,8 +446,8 @@
                                   (str "force the Runner to " (decapitalize target))))
                       :effect (effect (if (= target "End the run")
                                      (end-run state side eid card)
-                                     (wait-for (pay state :runner (make-eid state eid) card (->c :credit cost))
-                                               (system-msg state :runner (:msg async-result))
+                                     (wait-for [{:keys [msg]} (pay state :runner (make-eid state eid) card (->c :credit cost))]
+                                               (system-msg state :runner msg)
                                                (effect-completed state side eid))))})
                    card nil))}]
      :abilities [ability]}))
@@ -836,24 +835,25 @@
              :async true
              :req (req this-server)
              :effect (effect
-                       (continue-ability
-                         state side (let [credit-cost (* 2 (count (:scored runner)))]
-                            {:player :runner
-                             :async true
-                             :waiting-prompt true
-                             :prompt "Choose one"
-                             :choices [(when (can-pay? state :runner eid card nil (->c :credit credit-cost))
-                                         (str "Pay " credit-cost " [Credits]"))
-                                       "End the run"]
-                             :msg (msg (if (= "End the run" target)
-                                         (decapitalize target)
-                                         (str "force the runner to " (decapitalize target))))
-                             :effect (effect (if (= "End the run" target)
-                                            (end-run state :corp eid card)
-                                            (wait-for (pay state :runner (make-eid state eid) card (->c :credit credit-cost))
-                                                      (system-msg state :runner (:msg async-result))
-                                                      (effect-completed state side eid))))})
-                         card nil))}]})
+                      (let [credit-cost (* 2 (count (:scored runner)))]
+                        (continue-ability
+                          state side
+                          {:player :runner
+                           :async true
+                           :waiting-prompt true
+                           :prompt "Choose one"
+                           :choices [(when (can-pay? state :runner eid card nil (->c :credit credit-cost))
+                                       (str "Pay " credit-cost " [Credits]"))
+                                     "End the run"]
+                           :msg (msg (if (= "End the run" target)
+                                       (decapitalize target)
+                                       (str "force the runner to " (decapitalize target))))
+                           :effect (effect (if (= "End the run" target)
+                                             (end-run state :corp eid card)
+                                             (wait-for [{:keys [msg]} (pay state :runner (make-eid state eid) card (->c :credit credit-cost))]
+                                               (system-msg state :runner msg)
+                                               (effect-completed state side eid))))}
+                          card nil)))}]})
 
 (defcard "Heinlein Grid"
   {:abilities [{:req (req this-server)
@@ -1187,13 +1187,13 @@
              :effect (effect (cond+
                             [(and (= target "Spend [Click][Click]")
                                   (can-pay? state :runner eid card nil [(->c :click 2)]))
-                             (wait-for (pay state side (make-eid state eid) card (->c :click 2))
-                                       (system-msg state side (:msg async-result))
+                             (wait-for [{:keys [msg]} (pay state side card (->c :click 2))]
+                                       (system-msg state side msg)
                                        (effect-completed state :runner eid))]
                             [(and (= target "Pay 5 [Credits]")
                                   (can-pay? state :runner eid card nil [(->c :credit 5)]))
-                             (wait-for (pay state side (make-eid state eid) card (->c :credit 5))
-                                       (system-msg state side (:msg async-result))
+                             (wait-for [{:keys [msg]} (pay state side card (->c :credit 5))]
+                                       (system-msg state side msg)
                                        (effect-completed state :runner eid))]
                             [:else
                              (system-msg state :corp (str "uses " (:title card) " to end the run"))
@@ -1279,23 +1279,23 @@
              :choices {:card (every-pred ice? in-hand?)}
              :async true
              :effect (effect (wait-for
-                            (corp-install state side target nil {:cost-bonus -1
-                                                                 :msg-keys {:install-source card}})
-                            (update-hand-size state :corp)
-                            (if-let [moved-card async-result]
-                              (let [target-server (-> moved-card :zone second)
-                                    target-zone [:servers target-server :content]
-                                    target-name (zone->name target-server)]
-                                (if-not (same-server? moved-card card)
-                                  (continue-ability
-                                    state side
-                                    {:msg (msg "move itself to " target-name)
-                                     :effect (effect (unregister-events state side card)
-                                                  (let [c (move state side card target-zone)]
-                                                    (register-default-events state side c)))}
-                                    card nil)
-                                  (effect-completed state side eid)))
-                              (effect-completed state side eid))))}]})
+                               [moved-card (corp-install state side target nil {:cost-bonus -1
+                                                                                :msg-keys {:install-source card}})]
+                               (update-hand-size state :corp)
+                               (if moved-card
+                                 (let [target-server (-> moved-card :zone second)
+                                       target-zone [:servers target-server :content]
+                                       target-name (zone->name target-server)]
+                                   (if-not (same-server? moved-card card)
+                                     (continue-ability
+                                       state side
+                                       {:msg (msg "move itself to " target-name)
+                                        :effect (effect (unregister-events state side card)
+                                                        (let [c (move state side card target-zone)]
+                                                          (register-default-events state side c)))}
+                                       card nil)
+                                     (effect-completed state side eid)))
+                                 (effect-completed state side eid))))}]})
 
 (defcard "Midori"
   {:events [{:event :approach-ice

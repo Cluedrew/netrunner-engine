@@ -2262,18 +2262,17 @@
                 :choices {:card #(and (has-subtype? % "Bioroid")
                                       (not (rezzed? %)))}
                 :async true
-                :effect (effect (wait-for (rez state side target {:ignore-cost :all-costs
-                                                               :msg-keys {:include-cost-from-eid eid}})
-                                       (let [c (:card async-result)
-                                             ev (if (= (:active-player @state) :corp) :corp-turn-ends :runner-turn-ends)]
-                                         (register-events
-                                           state side card
-                                           [{:event ev
-                                             :unregister-once-resolved true
-                                             :duration :end-of-turn
-                                             :async true
-                                             :effect (effect (derez state side eid c))}])
-                                         (effect-completed state side eid))))}]})
+                :effect (effect (wait-for [{c :card} (rez state side target {:ignore-cost :all-costs
+                                                                             :msg-keys {:include-cost-from-eid eid}})]
+                                  (let [ev (if (= (:active-player @state) :corp) :corp-turn-ends :runner-turn-ends)]
+                                    (register-events
+                                     state side card
+                                     [{:event ev
+                                       :unregister-once-resolved true
+                                       :duration :end-of-turn
+                                       :async true
+                                       :effect (effect (derez state side eid c))}])
+                                    (effect-completed state side eid))))}]})
 
 (defcard "Sentinel Defense Program"
   {:events [{:event :damage
