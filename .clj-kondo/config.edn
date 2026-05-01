@@ -3,31 +3,7 @@
  {:unused-binding {:exclude-defmulti-args true
                    :exclude-destructured-as true}
   :unresolved-symbol
-  {:exclude [(game.macros/effect [state side eid card targets target context
-                               runner corp run run-server run-ices run-position
-                               current-ice corp-reg corp-reg-last runner-reg
-                               runner-reg-last installed remotes servers
-                               unprotected runnable-servers hq-runnable rd-runnable
-                               archives-runnable tagged this-card-run this-server
-                               corp-currently-drawing runner-currently-drawing
-                               this-card-is-run-source])
-             (game.macros/msg [state side eid card targets target context
-                               runner corp run run-server run-ices run-position
-                               current-ice corp-reg corp-reg-last runner-reg
-                               runner-reg-last installed remotes servers
-                               unprotected runnable-servers hq-runnable rd-runnable
-                               archives-runnable tagged this-card-run this-server
-                               corp-currently-drawing runner-currently-drawing
-                               this-card-is-run-source])
-             (game.macros/req [state side eid card targets target context
-                               runner corp run run-server run-ices run-position
-                               current-ice corp-reg corp-reg-last runner-reg
-                               runner-reg-last installed remotes servers
-                               unprotected runnable-servers hq-runnable rd-runnable
-                               archives-runnable tagged this-card-run this-server
-                               corp-currently-drawing runner-currently-drawing
-                               this-card-is-run-source])
-             (game.test-framework/do-game [state get-corp get-runner get-run refresh
+  {:exclude [(game.test-framework/do-game [state get-corp get-runner get-run refresh
                                            hand-size prompt-map prompt-button
                                            prompt-type prompt-buttons prompt-titles
                                            prompt-fmt])]}
