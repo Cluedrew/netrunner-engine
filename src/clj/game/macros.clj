@@ -3,52 +3,47 @@
             [clojure.tools.analyzer.ast :as ast]))
 
 (def forms
-  (->>
-    '[
-      runner (:runner @state)
-      corp (:corp @state)
-      run (:run @state)
-      run-server (get-in @state (concat [:corp :servers] (:server (:run @state))))
-      run-ices (get-in @state (concat [:corp :servers] (:server (:run @state)) [:ices]))
-      run-position (get-in @state [:run :position])
-      current-ice (game.core.ice/get-current-ice state)
-      corp-reg (get-in @state [:corp :register])
-      corp-reg-last (get-in @state [:corp :register-last-turn])
-      runner-reg (get-in @state [:runner :register])
-      runner-reg-last (get-in @state [:runner :register-last-turn])
-      target (let [t (first targets)]
-               (if (and (map? t)
-                        (contains? t :uuid)
-                        (contains? t :value))
-                 (:value t)
-                 t))
-      context (first targets)
-      installed (#{:rig :servers} (first (game.core.card/get-zone card)))
-      remotes (game.core.board/get-remote-names state)
-      servers (game.core.servers/zones->sorted-names (game.core.board/get-zones state))
-      unprotected (let [server (second (game.core.card/get-zone card))]
-                    (empty? (get-in @state [:corp :servers server :ices])))
-      runnable-servers (game.core.servers/zones->sorted-names
-                         (game.core.runs/get-runnable-zones state side eid card nil))
-      hq-runnable (some #{:hq} (game.core.runs/get-runnable-zones state))
-      rd-runnable (some #{:rd} (game.core.runs/get-runnable-zones state))
-      archives-runnable (some #{:archives} (game.core.runs/get-runnable-zones state))
-      tagged (jinteki.utils/is-tagged? state)
-      ;; only intended for use in event listeners on (pre-/post-, un-)successful-run or run-ends
-      ;; true if the run was initiated by this card
-      this-card-run (and (get-in card [:special :run-id])
-                         (= (get-in card [:special :run-id])
-                            (:run-id (first targets))))
-      ;; intended to check if the current card is the source of an active run
-      this-card-is-run-source (and (:run @state) (= (:cid card) (get-in @state [:run :source-card :cid])))
-      this-server (let [s (game.core.card/get-zone card)
-                        r (:server (:run @state))]
-                    (= (second s) (first r)))
-      corp-currently-drawing (seq (peek (get-in @state [:corp :register :currently-drawing])))
-      runner-currently-drawing (seq (peek (get-in @state [:runner :register :currently-drawing])))]
-    (partition 2)
-    (map (juxt first identity))
-    (into {})))
+  '{runner (:runner @state)
+    corp (:corp @state)
+    run (:run @state)
+    run-server (get-in @state (concat [:corp :servers] (:server (:run @state))))
+    run-ices (get-in @state (concat [:corp :servers] (:server (:run @state)) [:ices]))
+    run-position (get-in @state [:run :position])
+    current-ice (game.core.ice/get-current-ice state)
+    corp-reg (get-in @state [:corp :register])
+    corp-reg-last (get-in @state [:corp :register-last-turn])
+    runner-reg (get-in @state [:runner :register])
+    runner-reg-last (get-in @state [:runner :register-last-turn])
+    target (let [t (first targets)]
+             (if (and (map? t)
+                      (contains? t :uuid)
+                      (contains? t :value))
+               (:value t)
+               t))
+    context (first targets)
+    installed (#{:rig :servers} (first (game.core.card/get-zone card)))
+    remotes (game.core.board/get-remote-names state)
+    servers (game.core.servers/zones->sorted-names (game.core.board/get-zones state))
+    unprotected (let [server (second (game.core.card/get-zone card))]
+                  (empty? (get-in @state [:corp :servers server :ices])))
+    runnable-servers (game.core.servers/zones->sorted-names
+                      (game.core.runs/get-runnable-zones state side eid card nil))
+    hq-runnable (some #{:hq} (game.core.runs/get-runnable-zones state))
+    rd-runnable (some #{:rd} (game.core.runs/get-runnable-zones state))
+    archives-runnable (some #{:archives} (game.core.runs/get-runnable-zones state))
+    tagged (jinteki.utils/is-tagged? state)
+    ;; only intended for use in event listeners on (pre-/post-, un-)successful-run or run-ends
+    ;; true if the run was initiated by this card
+    this-card-run (and (get-in card [:special :run-id])
+                       (= (get-in card [:special :run-id])
+                          (:run-id (first targets))))
+    ;; intended to check if the current card is the source of an active run
+    this-card-is-run-source (and (:run @state) (= (:cid card) (get-in @state [:run :source-card :cid])))
+    this-server (let [s (game.core.card/get-zone card)
+                      r (:server (:run @state))]
+                  (= (second s) (first r)))
+    corp-currently-drawing (seq (peek (get-in @state [:corp :register :currently-drawing])))
+    runner-currently-drawing (seq (peek (get-in @state [:runner :register :currently-drawing])))})
 
 ;; Taken from https://github.com/Bronsa/tools.analyzer.jvm.deps/commit/8c7c3936e6f73e85f9e7cc122a2142c43d459c12
 ;; TODO: Switch from this inlined function to requiring the right package when the new version drops.
@@ -68,21 +63,35 @@
   (mapcat identity
           (for [x needed-locals
                 :when (contains? forms x)]
-            (get forms x))))
+            [x (get forms x)])))
 
-(defmacro effect [& expr]
-  (let [needed-locals (find-undefined-locals expr)
+(defmacro effect
+  "Returns a function taking `state`, `side`, `eid`, `card`, and `targets`, binding
+  any referenced local variables defined in [game.macros/forms].
+
+  Useful for `:effect` in ability maps."
+  [& exprs]
+  (let [needed-locals (find-undefined-locals exprs)
         nls (emit-only needed-locals)]
     `(fn ~['state 'side 'eid 'card 'targets]
        (assert (or (nil? (:source ~'eid)) (:cid (:source ~'eid)))
                (str ":source should be a card, received: " (:source ~'eid)))
-       (let [~@nls]
-         ~@expr))))
+       (let [~@nls
+             ret# (do ~@exprs)]
+         ret#))))
 
-(defmacro msg [& exprs]
+(defmacro msg
+  "Does the same as [game.macros/effect] except it wraps the provided exprs in `str`.
+
+  Useful for `:msg` in ability maps."
+  [& exprs]
   `(effect (str ~@exprs)))
 
-(defmacro req [& exprs]
+(defmacro req
+  "Does the same as [game.macros/effect] except it wraps the provided exprs in `and`.
+
+  Useful for `:req` in ability maps."
+  [& exprs]
   `(effect (and ~@exprs)))
 
 (defmacro wait-for
