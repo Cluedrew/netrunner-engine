@@ -9,9 +9,9 @@
                   (list*
                    (api/token-node 'let)
                    (if bind?
-                     (api/vector-node [(first (:children action))
-                                       (vary-meta (second (:children action)) assoc :clj-kondo/ignore [:invalid-arity])])
-                     (api/vector-node [(api/token-node 'async-result)
+                     (api/vector-node [(first (:children action)) (second (:children action))])
+                     (api/vector-node [(vary-meta (api/token-node 'async-result) assoc :clj-kondo/ignore [:unused-binding])
                                        (vary-meta action assoc :clj-kondo/ignore [:invalid-arity])]))
                    body))]
-    {:node (with-meta new-node (meta node))}))
+    {:node (with-meta new-node
+             (assoc (meta node) :clj-kondo/ignore [:invalid-arity]))}))
