@@ -6944,7 +6944,7 @@
       (is (no-prompt? state :runner) "No longer accessing cards"))))
 
 (deftest shred-test
-  (doseq [opt [(str "Trash 3 cards randomly from your hand") "The run does not end"]]
+  (doseq [opt ["Trash 3 cards randomly from your hand" "The run does not end"]]
     (do-game
       (new-game {:runner {:hand ["Shred"]}
                  :corp {:hand ["Prisec" "Ice Wall" "Ganked!" "PAD Campaign" "Hedge Fund" "IPO"
@@ -7445,7 +7445,7 @@
             (play-from-hand state :runner "Tailgate"))
           "discounted")
       (run-continue-until state :success)
-      (dotimes [n 3]
+      (dotimes [_ 3]
         (click-prompt state :runner "No action"))
       (is (no-prompt? state :runner)))))
 
