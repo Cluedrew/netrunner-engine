@@ -7,7 +7,7 @@
     [game.core.link :refer [get-link]]
     [game.core.prompts :refer [clear-wait-prompt show-trace-prompt show-wait-prompt]]
     [game.core.say :refer [system-msg system-say]]
-    [game.macros :refer [continue-ability req wait-for]]
+    [game.macros :refer [continue-ability effect wait-for]]
     [game.core.payment :refer [->c]]))
 
 (defn- determine-initiator
@@ -175,7 +175,7 @@
       (-> ability
           (dissoc :trace :req)
           (assoc :async true
-                 :effect (req (init-trace state side eid card trace))))
+                 :effect (effect (init-trace state side eid card trace))))
       card targets)
     (effect-completed state side eid)))
 

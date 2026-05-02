@@ -584,6 +584,7 @@
 
 (expose-vars
   [game.core.payment
+   ->c
    add-cost-label-to-ability
    build-cost-label
    build-cost-string
@@ -829,7 +830,7 @@
   [game.macros
    continue-ability
    msg
-   req
+   effect
    wait-for
    when-let*])
 

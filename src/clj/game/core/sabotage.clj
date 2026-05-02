@@ -6,12 +6,12 @@
     [game.core.engine :refer [resolve-ability]]
     [game.core.moving :refer [trash-cards]]
     [game.core.say :refer [multi-msg]]
-    [game.macros :refer [req msg continue-ability]]
+    [game.macros :refer [continue-ability effect msg req]]
     [game.utils :refer [enumerate-str enumerate-cards pluralize quantify]]))
 
 (defn choosing-prompt-req
   [n]
-  (req
+  (effect
     (let [cards-rd (count (get-in @state [:corp :deck]))
           forced-hq (- n cards-rd)]
       (str "Choose"
@@ -33,7 +33,7 @@
 
 (defn trash-selected-req
   [n]
-  (req
+  (effect
     (let [targets (if (nil? target) [] targets) ; catch cancel-effect that gives [nil] as targets
           selected-hq (count targets)
           selected-rd (min (count (:deck corp))
@@ -72,7 +72,7 @@
                                 :effect (trash-selected-req n)}
                        :effect (trash-selected-req n)})
         check-forcing-ab {:async true
-                          :effect (req
+                          :effect (effect
                                     (let [cards-rd (count (:deck corp))
                                           cards-hq (count (:hand corp))
                                           forced-hq (- n cards-rd)]
@@ -84,6 +84,6 @@
     {:req (req (pos? n))
      :msg (msg "sabotage " n)
      :async true
-     :effect (req
+     :effect (effect
                (swap! state update-in [:stats :runner :cards-sabotaged] (fnil + 0) n)
                (continue-ability state side check-forcing-ab card targets))}))

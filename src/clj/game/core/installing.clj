@@ -27,7 +27,7 @@
     [game.core.to-string :refer [card-str]]
     [game.core.toasts :refer [toast]]
     [game.core.update :refer [update!]]
-    [game.macros :refer [continue-ability req wait-for]]
+    [game.macros :refer [continue-ability effect req wait-for]]
     [game.utils :refer [dissoc-in enumerate-str in-coll? same-card? to-keyword quantify]]
     [medley.core :refer [find-first]]))
 
@@ -101,7 +101,7 @@
     {:prompt (str "The " (:title prev-card) " in " server " will now be trashed.")
      :choices ["OK"]
      :async true
-     :effect (req (system-msg state :corp (str "trashes " (card-str state prev-card)))
+     :effect (effect (system-msg state :corp (str "trashes " (card-str state prev-card)))
                   (if (get-card state prev-card) ; make sure they didn't trash the card themselves
                     (trash state :corp eid prev-card {:keep-server-alive true :suppress-checkpoint true :during-installation true})
                     (effect-completed state :corp eid)))}
@@ -382,7 +382,7 @@
                                                        :max cards-in-slot}
                                              :waiting-prompt true
                                              :async true
-                                             :effect (req (if (>= (count targets) need-to-trash)
+                                             :effect (effect (if (>= (count targets) need-to-trash)
                                                             (do (system-msg state side (str "trashes " (enumerate-str (map #(card-str state %) targets))))
                                                                 (wait-for
                                                                   (trash-cards state side targets {:keep-server-alive true :suppress-checkpoint true :during-installation true})
@@ -398,12 +398,12 @@
                            :max cards-in-slot}
                  :async true
                  :waiting-prompt true
-                 :effect (req (do (system-msg state side (str "trashes " (enumerate-str (map #(card-str state %) targets))))
+                 :effect (effect (do (system-msg state side (str "trashes " (enumerate-str (map #(card-str state %) targets))))
                                   (wait-for
                                     (trash-cards state side targets {:keep-server-alive true :suppress-checkpoint true :during-installation true})
                                     (corp-install-pay state side eid c server (assoc args :resolved-optional-trash true)))))
                  :cancel {:async true
-                          :effect (req (corp-install-pay state side eid c server (assoc args :resolved-optional-trash true)))}}
+                          :effect (effect (corp-install-pay state side eid c server (assoc args :resolved-optional-trash true)))}}
                 nil nil)
               :else (effect-completed state side eid))))))
 
@@ -427,7 +427,7 @@
                          {:prompt (str "Choose a location to install " (:title card))
                           :choices (installable-servers state card)
                           :async true
-                          :effect (req (corp-install state side eid card target args))}
+                          :effect (effect (corp-install state side eid card target args))}
                          card nil)
        ;; A card was selected as the server; recurse, with the :host-card parameter set.
        (and (map? server)
@@ -662,11 +662,11 @@
                                  (not (has-ancestor? % host-card))
                                  (program? %))}
            :async true
-           :effect (req (wait-for (trash-cards state side (make-eid state eid) targets {:unpreventable true :suppress-checkpoint true})
+           :effect (effect (wait-for (trash-cards state side (make-eid state eid) targets {:unpreventable true :suppress-checkpoint true})
                                   (update-mu state)
                                   (runner-install-pay state side eid card (assoc args :resolved-optional-trash true))))
            :cancel {:async true
-                    :effect (req (update-mu state)
+                    :effect (effect (update-mu state)
                                  (if (and (= available-mem (available-mu state))
                                           ;;(not runner-wants-to-trash?)
                                           (not (or no-mu (sufficient-mu? state card))))
@@ -705,15 +705,15 @@
         (continue-ability
           state side
           {:prompt (str (:title potential-host) " can only handle " max-mu " MU of programs - trash programs on " (:title card) " worth at least " to-eliminate " MU")
-           :choices {:req (req (and (program? target)
-                                    (some #(same-card? % target) relevant-cards)))
+           :choices {:req (req (program? target)
+                                    (some #(same-card? % target) relevant-cards))
                      :max (count relevant-cards)
                      :min 1}
            :async true
            ;; note - this is recursive because there's no good way to specify in the prompt that
            ;; the total selection is worth X memory, since the req function must be satisfied at
            ;; every point of the selection --nbkelly, jun 2024
-           :effect (req (wait-for
+           :effect (effect (wait-for
                           (trash-cards state side (make-eid state eid) targets {:unpreventable true :suppress-checkpoint true})
                           (update-mu state)
                           (runner-host-enforce-specific-memory state side eid card
@@ -741,7 +741,7 @@
                      :min to-destroy
                      :max (count relevant-cards)}
            :async true
-           :effect (req (wait-for (trash-cards state side (make-eid state eid) targets {:unpreventable true :suppress-checkpoint true})
+           :effect (effect (wait-for (trash-cards state side (make-eid state eid) targets {:unpreventable true :suppress-checkpoint true})
                                   (update-mu state)
                                   (runner-host-enforce-specific-memory state side eid card
                                                                        (get-card state potential-host) args)))}
@@ -757,7 +757,7 @@
     {:choices (conj potential-hosts "The Rig")
      :prompt (str "Choose a destination for " (:title card))
      :async true
-     :effect (req (if (= target "The Rig")
+     :effect (effect (if (= target "The Rig")
                     (runner-install-pay state side eid card args)
                     ;; todo - apply all the modifiers from the host map
                     (let [host-abi (some-hosting-effect state target)
@@ -786,7 +786,7 @@
          {:choices hosting
           :prompt (str "Choose a card to host " (:title card) " on")
           :async true
-          :effect (req (runner-install-pay state side eid card (assoc args :host-card target)))}
+          :effect (effect (runner-install-pay state side eid card (assoc args :host-card target)))}
          card nil)
        (if-let [potential-hosts (runner-can-host state side eid card args)]
          (runner-host-choice state side eid card potential-hosts args)

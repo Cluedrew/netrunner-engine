@@ -7,7 +7,7 @@
     [game.core.flags :refer [any-flag-fn?]]
     [game.core.prompts :refer [clear-wait-prompt show-prompt-with-dice show-wait-prompt]]
     [game.core.say :refer [system-msg]]
-    [game.macros :refer [continue-ability req wait-for]]
+    [game.macros :refer [continue-ability effect wait-for]]
     [jinteki.utils :refer [str->int]]
     [clojure.string :as string]
     [game.core.payment :refer [->c]]))
@@ -71,7 +71,7 @@
       (-> ability
           (dissoc :psi :once :req)
           (assoc :async true
-                 :effect (req (psi-game state side eid card psi targets))))
+                 :effect (effect (psi-game state side eid card psi targets))))
       card targets)
     (effect-completed state side eid)))
 

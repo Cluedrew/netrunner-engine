@@ -1,4 +1,4 @@
-(ns web.stats-test
+(ns ^:eftest/synchronized web.stats-test
   (:require
    [clojure.test :refer :all]
    [monger.collection :as mc]
