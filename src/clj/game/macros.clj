@@ -60,10 +60,7 @@
 
 (defn- emit-only
   [needed-locals]
-  (mapcat identity
-          (for [x needed-locals
-                :when (contains? forms x)]
-            [x (get forms x)])))
+  (mapcat #(when-let [form (get forms %)] [% form]) needed-locals))
 
 (defmacro effect
   "Returns a function taking `state`, `side`, `eid`, `card`, and `targets`, binding
@@ -123,9 +120,8 @@
   [action & body]
   (when (vector? action)
     (assert (= 2 (count action)) "Both bind and call must be in binding vec"))
-  (let [[binds action] (if (vector? action)
-                         [[{(first action) :result}] (second action)]
-                         [[{'async-result :result}] action])
+  (let [[binds action] (if (vector? action) action ['async-result action])
+        binds [{binds :result}]
         abnormal? (#{'handler 'payable?} (first action))
         to-take (if abnormal? 4 3)
         fn-name (gensym (name (first action)))
@@ -136,7 +132,7 @@
            new-eid# (if use-eid# eid?# (game.core.eid/make-eid ~state existing-eid#))]
        (game.core.eid/register-effect-completed
          ~state new-eid#
-         (fn ~fn-name ~(if (vector? binds) binds [binds])
+         (fn ~fn-name ~binds
            (let [ret# (do ~@body)]
              ret#)))
        (if use-eid#
